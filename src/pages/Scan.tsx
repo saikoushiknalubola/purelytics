@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import logo from "@/assets/logo.jpeg";
+
 
 const Scan = () => {
   const [isScanning, setIsScanning] = useState(false);
@@ -105,7 +105,10 @@ const Scan = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="p-4 flex items-center justify-between border-b border-border">
-        <img src={logo} alt="Purelytics" className="h-10" />
+        <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+          ← Home
+        </Button>
+        <h1 className="text-xl font-semibold">Purelytics</h1>
         <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
           Profile
         </Button>
