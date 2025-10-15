@@ -68,7 +68,7 @@ export type Database = {
           summary: string | null
           toxiscore: number | null
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           alternatives?: Json | null
@@ -84,7 +84,7 @@ export type Database = {
           summary?: string | null
           toxiscore?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           alternatives?: Json | null
@@ -100,7 +100,7 @@ export type Database = {
           summary?: string | null
           toxiscore?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
