@@ -1,4 +1,24 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Define strict validation schemas for AI responses
+const ProductExtractionSchema = z.object({
+  productName: z.string().trim().min(1).max(200),
+  brand: z.string().trim().max(100).default("Unknown"),
+  category: z.enum(["food", "cosmetic", "cleaning", "pharmaceutical"]),
+  ingredients: z.array(z.string().trim().min(1).max(100)).min(1).max(500),
+});
+
+const SummarySchema = z.object({
+  summary: z.string().trim().max(1000),
+  alternatives: z.array(
+    z.object({
+      name: z.string().trim().max(200),
+      brand: z.string().trim().max(100),
+      score: z.number().int().min(0).max(100),
+    })
+  ).max(10).default([]),
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,7 +98,19 @@ Return ONLY a JSON object:
     const aiData = await aiResponse.json();
     const content = aiData.choices[0].message.content;
     const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || content.match(/(\{[\s\S]*\})/);
-    const extractedData = JSON.parse(jsonMatch ? jsonMatch[1] : content);
+    
+    // Validate AI response with Zod schema
+    let extractedData;
+    try {
+      const parsedData = JSON.parse(jsonMatch ? jsonMatch[1] : content);
+      extractedData = ProductExtractionSchema.parse(parsedData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error("AI product extraction validation failed:", error.errors);
+        throw new Error("AI returned invalid product data. Please try again with a clearer image.");
+      }
+      throw error;
+    }
 
     // Fetch ingredient toxicity data
     const { data: ingredientData } = await supabase.from("ingredients").select("*");
@@ -133,7 +165,19 @@ Return JSON:
     const summaryData = await summaryResponse.json();
     const summaryContent = summaryData.choices[0].message.content;
     const summaryMatch = summaryContent.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || summaryContent.match(/(\{[\s\S]*\})/);
-    const summaryJson = JSON.parse(summaryMatch ? summaryMatch[1] : summaryContent);
+    
+    // Validate summary response with Zod schema
+    let summaryJson;
+    try {
+      const parsedSummary = JSON.parse(summaryMatch ? summaryMatch[1] : summaryContent);
+      summaryJson = SummarySchema.parse(parsedSummary);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error("AI summary validation failed:", error.errors);
+        throw new Error("AI returned invalid summary data. Please try again.");
+      }
+      throw error;
+    }
 
     // Save to database
     const { data: product } = await supabase.from("products").insert({
