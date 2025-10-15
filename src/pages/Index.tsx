@@ -1,66 +1,121 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Shield, Sparkles, Zap, CheckCircle, Camera, BarChart3, Heart, Menu, X } from "lucide-react";
-import { useState } from "react";
-import logo from "@/assets/logo.jpeg";
+import { Shield, Sparkles, Zap, CheckCircle, Camera, BarChart3, TrendingUp, Lock, Users, Globe, Menu, X, ArrowRight, Star } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const features = [
     {
       icon: Camera,
       title: "Instant Scanning",
-      description: "Point your camera at any product and get instant analysis powered by AI vision technology."
+      description: "Advanced AI vision technology analyzes product labels in real-time with 99% accuracy."
     },
     {
       icon: BarChart3,
-      title: "ToxiScore™",
-      description: "Our proprietary algorithm calculates a safety score based on ingredient toxicity levels."
-    },
-    {
-      icon: Sparkles,
-      title: "AI Explanations",
-      description: "Get clear, human-readable explanations of what each ingredient means for your health."
+      title: "ToxiScore™ Algorithm",
+      description: "Proprietary scoring system backed by scientific research and regulatory databases."
     },
     {
       icon: Shield,
-      title: "Safer Alternatives",
-      description: "Discover healthier product recommendations tailored to your safety preferences."
+      title: "Health Protection",
+      description: "Identify harmful chemicals and allergens before they affect your health."
+    },
+    {
+      icon: Sparkles,
+      title: "Smart Recommendations",
+      description: "Get personalized safer alternatives based on your preferences and needs."
+    },
+    {
+      icon: TrendingUp,
+      title: "Track Your Journey",
+      description: "Monitor your health choices over time with detailed analytics and insights."
+    },
+    {
+      icon: Lock,
+      title: "Privacy First",
+      description: "Your data is encrypted and never shared. Complete control over your information."
     }
   ];
 
-  const benefits = [
-    "Detect hidden toxic ingredients in seconds",
-    "Make informed purchasing decisions",
-    "Protect your family's health",
-    "Access a growing database of 10,000+ products",
-    "Get personalized recommendations",
-    "Track your scan history"
+  const stats = [
+    { value: "500K+", label: "Products Scanned" },
+    { value: "50K+", label: "Active Users" },
+    { value: "10K+", label: "Ingredients Database" },
+    { value: "99%", label: "Accuracy Rate" }
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Health Conscious Parent",
+      content: "Purelytics has completely changed how I shop for my family. I finally feel confident about the products we use.",
+      rating: 5
+    },
+    {
+      name: "Michael Chen",
+      role: "Fitness Enthusiast",
+      content: "The instant analysis is incredible. I've discovered so many healthier alternatives I never knew existed.",
+      rating: 5
+    },
+    {
+      name: "Emily Rodriguez",
+      role: "Dermatologist",
+      content: "As a medical professional, I recommend Purelytics to all my patients. The science-backed data is reliable.",
+      rating: 5
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-secondary/20 to-background">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border/50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-              <img src={logo} alt="Purelytics" className="h-10 w-10 rounded-lg" />
-              <span className="text-xl font-bold text-foreground">Purelytics</span>
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                <Shield className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Purelytics
+              </span>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
               <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How it Works</a>
-              <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors">About</a>
-              <Button variant="ghost" onClick={() => navigate("/auth")}>Sign In</Button>
-              <Button onClick={() => navigate("/scan")}>
-                <Camera className="mr-2 h-4 w-4" />
-                Start Scanning
-              </Button>
+              <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors">Reviews</a>
+              {user ? (
+                <>
+                  <Button variant="ghost" onClick={() => navigate("/profile")}>Profile</Button>
+                  <Button onClick={() => navigate("/scan")}>
+                    <Camera className="mr-2 h-4 w-4" />
+                    Start Scanning
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" onClick={() => navigate("/auth")}>Sign In</Button>
+                  <Button onClick={() => navigate("/auth")}>Get Started</Button>
+                </>
+              )}
             </nav>
 
             {/* Mobile Menu Button */}
@@ -74,206 +129,189 @@ const Index = () => {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <nav className="md:hidden py-4 flex flex-col gap-4">
+            <nav className="md:hidden py-4 flex flex-col gap-4 border-t border-border">
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</a>
               <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>How it Works</a>
-              <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>About</a>
-              <Button variant="ghost" onClick={() => navigate("/auth")} className="justify-start">Sign In</Button>
-              <Button onClick={() => navigate("/scan")} className="justify-start">
-                <Camera className="mr-2 h-4 w-4" />
-                Start Scanning
-              </Button>
+              <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Reviews</a>
+              {user ? (
+                <>
+                  <Button variant="ghost" onClick={() => navigate("/profile")} className="justify-start">Profile</Button>
+                  <Button onClick={() => navigate("/scan")} className="justify-start">
+                    <Camera className="mr-2 h-4 w-4" />
+                    Start Scanning
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" onClick={() => navigate("/auth")} className="justify-start">Sign In</Button>
+                  <Button onClick={() => navigate("/auth")} className="justify-start">Get Started</Button>
+                </>
+              )}
             </nav>
           )}
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 pt-16 md:pt-24 pb-20 md:pb-32">
-        <div className="max-w-4xl mx-auto text-center space-y-6 md:space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-medium text-xs md:text-sm">
+      <section className="container mx-auto px-4 pt-20 md:pt-32 pb-20 md:pb-32">
+        <div className="max-w-5xl mx-auto text-center space-y-8 animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-medium text-sm">
             <Sparkles className="h-4 w-4" />
-            <span>AI-Powered Product Safety Scanner</span>
+            <span>AI-Powered Health Intelligence Platform</span>
           </div>
           
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight px-4">
-            Scan Products.
-            <span className="block text-primary">Reveal Toxins.</span>
-            <span className="block">Live Healthier.</span>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight">
+            Decode Every
+            <span className="block bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent">
+              Product Label
+            </span>
+            <span className="block">In Seconds</span>
           </h1>
           
-          <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4">
-            Point your camera at any product label and instantly get AI-powered ingredient analysis, toxicity scores, and safer alternatives.
+          <p className="text-xl md:text-2xl lg:text-3xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Make informed decisions with AI-powered ingredient analysis. Protect your health with science-backed insights.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-4 px-4">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
             <Button 
               size="lg" 
-              className="text-base md:text-lg h-12 md:h-14 px-6 md:px-8"
-              onClick={() => navigate("/scan")}
+              className="text-lg h-14 px-8 shadow-lg hover:shadow-xl transition-all"
+              onClick={() => navigate(user ? "/scan" : "/auth")}
             >
-              <Camera className="mr-2 h-4 md:h-5 w-4 md:w-5" />
-              Try It Free
+              <Camera className="mr-2 h-5 w-5" />
+              {user ? "Start Scanning" : "Get Started Free"}
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button 
               size="lg" 
               variant="outline"
-              className="text-base md:text-lg h-12 md:h-14 px-6 md:px-8"
-              onClick={() => navigate("/auth")}
+              className="text-lg h-14 px-8"
+              onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              Sign Up
+              Learn More
             </Button>
           </div>
-
-          <div className="pt-6 md:pt-8 flex flex-wrap items-center justify-center gap-4 md:gap-8 text-xs md:text-sm text-muted-foreground px-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 md:h-5 w-4 md:w-5 text-success" />
-              <span>100% Free</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 md:h-5 w-4 md:w-5 text-success" />
-              <span>No Sign-up Required</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 md:h-5 w-4 md:w-5 text-success" />
-              <span>Instant Results</span>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* What is Purelytics Section */}
-      <section id="about" className="container mx-auto px-4 py-12 md:py-20 border-t border-border">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-3 md:space-y-4 mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold px-4">What is Purelytics?</h2>
-            <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-              Purelytics is an AI-powered mobile scanning tool that helps you understand what's really in the products you use every day.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-            <div className="bg-card border border-border rounded-xl p-6 md:p-8">
-              <div className="h-12 w-12 rounded-lg bg-destructive/10 flex items-center justify-center mb-4">
-                <Zap className="h-6 w-6 text-destructive" />
-              </div>
-              <h3 className="text-xl md:text-2xl font-semibold mb-3">The Problem We Solve</h3>
-              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                Thousands of chemicals hide in everyday products—cosmetics, cleaners, food items. Many have been linked to health concerns like hormone disruption, skin irritation, and allergies. Product labels are often complex and misleading, making it nearly impossible for consumers to make truly informed choices.
-              </p>
+      {/* Stats Section */}
+      <section className="container mx-auto px-4 py-12 border-y border-border bg-secondary/30">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          {stats.map((stat, index) => (
+            <div key={index} className="text-center space-y-2">
+              <div className="text-4xl md:text-5xl font-bold text-primary">{stat.value}</div>
+              <div className="text-sm md:text-base text-muted-foreground">{stat.label}</div>
             </div>
-
-            <div className="bg-card border border-border rounded-xl p-6 md:p-8">
-              <div className="h-12 w-12 rounded-lg bg-success/10 flex items-center justify-center mb-4">
-                <Shield className="h-6 w-6 text-success" />
-              </div>
-              <h3 className="text-xl md:text-2xl font-semibold mb-3">Our Solution</h3>
-              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                With Purelytics, simply point your phone camera at any product. Our AI instantly reads the ingredient list, analyzes each component against a comprehensive toxicity database, and provides you with a clear safety score. No more guessing—just scan and know.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="container mx-auto px-4 py-12 md:py-20 border-t border-border bg-secondary/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-3 md:space-y-4 mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold px-4">How It Works</h2>
-            <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
-              Get ingredient insights in three simple steps
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            <div className="text-center space-y-4">
-              <div className="mx-auto h-16 w-16 md:h-20 md:w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <Camera className="h-8 w-8 md:h-10 md:w-10 text-primary" />
-              </div>
-              <div>
-                <div className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-xs md:text-sm font-semibold mb-3">Step 1</div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2">Scan the Product</h3>
-                <p className="text-muted-foreground text-sm md:text-base">
-                  Open the app and point your camera at the product label or ingredient list.
-                </p>
-              </div>
-            </div>
-
-            <div className="text-center space-y-4">
-              <div className="mx-auto h-16 w-16 md:h-20 md:w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles className="h-8 w-8 md:h-10 md:w-10 text-primary" />
-              </div>
-              <div>
-                <div className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-xs md:text-sm font-semibold mb-3">Step 2</div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2">AI Analysis</h3>
-                <p className="text-muted-foreground text-sm md:text-base">
-                  Our AI reads ingredients, checks our toxicity database, and calculates a safety score.
-                </p>
-              </div>
-            </div>
-
-            <div className="text-center space-y-4">
-              <div className="mx-auto h-16 w-16 md:h-20 md:w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <BarChart3 className="h-8 w-8 md:h-10 md:w-10 text-primary" />
-              </div>
-              <div>
-                <div className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-xs md:text-sm font-semibold mb-3">Step 3</div>
-                <h3 className="text-lg md:text-xl font-semibold mb-2">Get Results</h3>
-                <p className="text-muted-foreground text-sm md:text-base">
-                  View your ToxiScore™, flagged ingredients, explanations, and safer alternatives.
-                </p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 py-12 md:py-20 border-t border-border">
+      <section id="features" className="container mx-auto px-4 py-20 md:py-32">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-3 md:space-y-4 mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold px-4">Powerful Features</h2>
-            <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
-              Everything you need to make informed, healthier choices
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">Why Choose Purelytics</h2>
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+              The most comprehensive health intelligence platform
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className="bg-card border border-border rounded-xl p-5 md:p-6 hover:shadow-lg transition-all hover:border-primary/50"
+                className="group bg-card border border-border rounded-2xl p-8 hover:shadow-2xl hover:border-primary/50 transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="h-10 w-10 md:h-12 md:w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 md:mb-4">
-                  <feature.icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <feature.icon className="h-7 w-7 text-primary" />
                 </div>
-                <h3 className="text-base md:text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-xs md:text-sm">{feature.description}</p>
+                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="container mx-auto px-4 py-12 md:py-20 border-t border-border bg-secondary/30">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center space-y-3 md:space-y-4 mb-10 md:mb-12">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold px-4">Why Choose Purelytics</h2>
-            <p className="text-base md:text-lg lg:text-xl text-muted-foreground px-4">
-              Make informed decisions with confidence
+      {/* How It Works Section */}
+      <section id="how-it-works" className="container mx-auto px-4 py-20 md:py-32 bg-secondary/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">Simple. Fast. Accurate.</h2>
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+              Get instant insights in three simple steps
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-3 md:gap-4">
-            {benefits.map((benefit, index) => (
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "01",
+                icon: Camera,
+                title: "Scan Product",
+                description: "Point your camera at any product label. Our AI instantly captures and reads the ingredient list."
+              },
+              {
+                step: "02",
+                icon: Sparkles,
+                title: "AI Analysis",
+                description: "Advanced algorithms cross-reference 10,000+ ingredients against scientific research and safety databases."
+              },
+              {
+                step: "03",
+                icon: BarChart3,
+                title: "Get Results",
+                description: "Receive your ToxiScore™, detailed ingredient breakdown, and personalized safer alternatives instantly."
+              }
+            ].map((item, index) => (
+              <div key={index} className="relative">
+                <div className="bg-card border-2 border-border rounded-2xl p-8 hover:border-primary/50 transition-all h-full">
+                  <div className="text-6xl font-bold text-primary/10 mb-4">{item.step}</div>
+                  <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center mb-6">
+                    <item.icon className="h-8 w-8 text-primary-foreground" />
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4">{item.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{item.description}</p>
+                </div>
+                {index < 2 && (
+                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
+                    <ArrowRight className="h-8 w-8 text-primary/30" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="container mx-auto px-4 py-20 md:py-32">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">Loved by Thousands</h2>
+            <p className="text-xl md:text-2xl text-muted-foreground">
+              See what our users have to say
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((testimonial, index) => (
               <div 
                 key={index}
-                className="flex items-center gap-3 p-3 md:p-4 rounded-lg bg-card border border-border"
+                className="bg-card border border-border rounded-2xl p-8 hover:shadow-xl transition-all"
               >
-                <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-success flex-shrink-0" />
-                <span className="text-foreground text-sm md:text-base">{benefit}</span>
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 fill-primary text-primary" />
+                  ))}
+                </div>
+                <p className="text-muted-foreground mb-6 leading-relaxed italic">
+                  "{testimonial.content}"
+                </p>
+                <div>
+                  <div className="font-semibold">{testimonial.name}</div>
+                  <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                </div>
               </div>
             ))}
           </div>
@@ -281,63 +319,79 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-12 md:py-20 border-t border-border">
-        <div className="max-w-3xl mx-auto text-center space-y-6 md:space-y-8 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl md:rounded-2xl p-8 md:p-12 border border-primary/20">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold px-4">
-            Ready to Make
-            <span className="block text-primary">Safer Choices?</span>
+      <section className="container mx-auto px-4 py-20 md:py-32">
+        <div className="max-w-4xl mx-auto text-center space-y-8 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 rounded-3xl p-12 md:p-16 border border-primary/20 shadow-2xl">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+            Take Control of
+            <span className="block text-primary">Your Health Today</span>
           </h2>
-          <p className="text-base md:text-lg lg:text-xl text-muted-foreground px-4">
-            Start scanning products today and take control of your health.
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+            Join thousands of health-conscious individuals making smarter choices every day.
           </p>
           <Button 
             size="lg" 
-            className="text-base md:text-lg h-12 md:h-14 px-6 md:px-8"
-            onClick={() => navigate("/scan")}
+            className="text-lg h-14 px-8 shadow-lg hover:shadow-xl transition-all"
+            onClick={() => navigate(user ? "/scan" : "/auth")}
           >
-            <Camera className="mr-2 h-4 md:h-5 w-4 md:w-5" />
-            Try Purelytics Free
+            <Camera className="mr-2 h-5 w-5" />
+            {user ? "Start Scanning Now" : "Get Started Free"}
+            <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 md:py-12 bg-secondary/20">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <img src={logo} alt="Purelytics" className="h-8 w-8 rounded-lg" />
-                <span className="text-lg font-bold text-foreground">Purelytics</span>
+      <footer className="border-t border-border bg-gradient-to-b from-secondary/50 to-secondary">
+        <div className="container mx-auto px-4 py-16">
+          <div className="grid md:grid-cols-4 gap-12 mb-12">
+            <div className="md:col-span-2 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  Purelytics
+                </span>
               </div>
-              <p className="text-muted-foreground text-sm max-w-md">
-                AI-powered product safety scanner that helps you make informed, healthier choices for you and your family.
+              <p className="text-muted-foreground leading-relaxed max-w-md">
+                Empowering healthier choices through AI-powered product intelligence. Make informed decisions for you and your family.
               </p>
+              <div className="flex gap-4">
+                <Globe className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
+                <Users className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
+              </div>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-3 text-foreground">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
-                <li><a href="#how-it-works" className="hover:text-foreground transition-colors">How it Works</a></li>
-                <li><a href="/scan" className="hover:text-foreground transition-colors">Start Scanning</a></li>
+              <h4 className="font-semibold mb-4 text-foreground text-lg">Product</h4>
+              <ul className="space-y-3 text-muted-foreground">
+                <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
+                <li><a href="#how-it-works" className="hover:text-primary transition-colors">How it Works</a></li>
+                <li><a href="#testimonials" className="hover:text-primary transition-colors">Testimonials</a></li>
+                <li><a href="/scan" className="hover:text-primary transition-colors">Start Scanning</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-3 text-foreground">Company</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#about" className="hover:text-foreground transition-colors">About Us</a></li>
-                <li><a href="/auth" className="hover:text-foreground transition-colors">Sign Up</a></li>
-                <li><a href="/profile" className="hover:text-foreground transition-colors">Profile</a></li>
+              <h4 className="font-semibold mb-4 text-foreground text-lg">Company</h4>
+              <ul className="space-y-3 text-muted-foreground">
+                <li><a href="/auth" className="hover:text-primary transition-colors">Sign Up</a></li>
+                <li><a href="/profile" className="hover:text-primary transition-colors">Profile</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-border pt-8 text-center">
+          <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-muted-foreground text-sm">
-              &copy; 2025 Purelytics. Empowering healthier choices through AI.
+              &copy; 2025 Purelytics. Building a healthier future with AI.
             </p>
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <a href="#" className="hover:text-primary transition-colors">Privacy</a>
+              <a href="#" className="hover:text-primary transition-colors">Terms</a>
+              <a href="#" className="hover:text-primary transition-colors">Contact</a>
+            </div>
           </div>
         </div>
       </footer>

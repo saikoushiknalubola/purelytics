@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import logo from "@/assets/logo.jpeg";
+import { Shield } from "lucide-react";
 import { z } from "zod";
 
 const authSchema = z.object({
@@ -78,16 +78,20 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 space-y-6">
-        <div className="text-center space-y-2">
-          <img src={logo} alt="Purelytics" className="h-12 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold">
-            {isLogin ? "Welcome Back" : "Create Account"}
-          </h1>
-          <p className="text-muted-foreground">
-            {isLogin
-              ? "Sign in to access your scan history"
-              : "Sign up to start analyzing products"}
-          </p>
+        <div className="text-center space-y-4">
+          <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+            <Shield className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold mb-2">
+              {isLogin ? "Welcome Back" : "Join Purelytics"}
+            </h1>
+            <p className="text-muted-foreground">
+              {isLogin
+                ? "Sign in to continue your health journey"
+                : "Start making smarter health choices today"}
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">

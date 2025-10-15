@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ToxiScoreMeter from "@/components/ToxiScoreMeter";
-import logo from "@/assets/logo.jpeg";
 
 interface Product {
   id: string;
@@ -113,12 +112,12 @@ const Result = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="p-4 flex items-center justify-between border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+      <header className="p-4 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur-sm">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/scan")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          Scan Again
         </Button>
-        <img src={logo} alt="Purelytics" className="h-8" />
+        <h1 className="text-lg font-bold">Purelytics</h1>
         <Button variant="ghost" size="sm" onClick={handleShare}>
           <Share2 className="h-4 w-4" />
         </Button>

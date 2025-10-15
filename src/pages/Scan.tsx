@@ -17,12 +17,26 @@ const Scan = () => {
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { 
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
       });
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         setStream(mediaStream);
-        setIsCameraActive(true);
+        
+        // Wait for video metadata to load before activating camera
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().then(() => {
+            setIsCameraActive(true);
+          }).catch((error) => {
+            console.error("Error playing video:", error);
+            toast.error("Failed to start camera preview");
+          });
+        };
       }
     } catch (error) {
       toast.error("Failed to access camera. Please allow camera permissions.");
