@@ -7,6 +7,19 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import logo from "@/assets/logo.jpeg";
+import { z } from "zod";
+
+const authSchema = z.object({
+  email: z.string()
+    .trim()
+    .email({ message: "Invalid email address" })
+    .max(255, { message: "Email too long" }),
+  password: z.string()
+    .min(8, { message: "Password must be at least 8 characters" })
+    .max(128, { message: "Password too long" })
+    .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
+    .regex(/[0-9]/, { message: "Password must contain at least one number" })
+});
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -30,17 +43,20 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Validate inputs with Zod schema
+      const validated = authSchema.parse({ email, password });
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: validated.email,
+          password: validated.password,
         });
         if (error) throw error;
         toast.success("Welcome back!");
       } else {
         const { error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: validated.email,
+          password: validated.password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
           },
@@ -49,7 +65,11 @@ const Auth = () => {
         toast.success("Account created! You can now sign in.");
       }
     } catch (error: any) {
-      toast.error(error.message || "Authentication failed");
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message || "Authentication failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -92,7 +112,7 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
             />
           </div>
 
