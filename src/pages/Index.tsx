@@ -30,7 +30,7 @@ const Index = () => {
     {
       icon: BarChart3,
       title: "ToxiScore™ Algorithm",
-      description: "Proprietary scoring system backed by scientific research and regulatory databases."
+      description: "Smart scoring system analyzing ingredients against scientific research and safety databases."
     },
     {
       icon: Shield,
@@ -54,28 +54,21 @@ const Index = () => {
     }
   ];
 
-  const stats = [
-    { value: "500K+", label: "Products Scanned" },
-    { value: "50K+", label: "Active Users" },
-    { value: "10K+", label: "Ingredients Database" },
-    { value: "99%", label: "Accuracy Rate" }
-  ];
-
   const testimonials = [
     {
-      name: "Sarah Johnson",
+      name: "Priya Sharma",
       role: "Health Conscious Parent",
       content: "Purelytics has completely changed how I shop for my family. I finally feel confident about the products we use.",
       rating: 5
     },
     {
-      name: "Michael Chen",
+      name: "Arjun Patel",
       role: "Fitness Enthusiast",
       content: "The instant analysis is incredible. I've discovered so many healthier alternatives I never knew existed.",
       rating: 5
     },
     {
-      name: "Emily Rodriguez",
+      name: "Dr. Kavita Reddy",
       role: "Dermatologist",
       content: "As a medical professional, I recommend Purelytics to all my patients. The science-backed data is reliable.",
       rating: 5
@@ -89,10 +82,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                <Shield className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
                 Purelytics
               </span>
             </div>
@@ -194,17 +184,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="container mx-auto px-4 py-12 border-y border-border bg-secondary/30">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="text-center space-y-2">
-              <div className="text-4xl md:text-5xl font-bold text-primary">{stat.value}</div>
-              <div className="text-sm md:text-base text-muted-foreground">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* Features Section */}
       <section id="features" className="container mx-auto px-4 py-20 md:py-32">
@@ -255,7 +234,7 @@ const Index = () => {
                 step: "02",
                 icon: Sparkles,
                 title: "AI Analysis",
-                description: "Advanced algorithms cross-reference 10,000+ ingredients against scientific research and safety databases."
+                description: "Advanced algorithms cross-reference ingredients against scientific research and safety databases."
               },
               {
                 step: "03",
@@ -288,9 +267,9 @@ const Index = () => {
       <section id="testimonials" className="container mx-auto px-4 py-20 md:py-32">
         <div className="max-w-6xl mx-auto">
           <div className="text-center space-y-4 mb-16">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">Loved by Thousands</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">What Our Users Say</h2>
             <p className="text-xl md:text-2xl text-muted-foreground">
-              See what our users have to say
+              Real people, real results
             </p>
           </div>
 
@@ -326,7 +305,7 @@ const Index = () => {
             <span className="block text-primary">Your Health Today</span>
           </h2>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of health-conscious individuals making smarter choices every day.
+            Start making informed decisions about the products you use every day.
           </p>
           <Button 
             size="lg" 
@@ -346,10 +325,7 @@ const Index = () => {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-primary-foreground" />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
                   Purelytics
                 </span>
               </div>
