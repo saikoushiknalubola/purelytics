@@ -25,7 +25,7 @@ const Index = () => {
     {
       icon: Camera,
       title: "Instant Scanning",
-      description: "Advanced AI vision technology analyzes product labels in real-time with 99% accuracy."
+      description: "Advanced AI vision technology analyzes product labels in real-time."
     },
     {
       icon: BarChart3,
@@ -143,43 +143,46 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 pt-20 md:pt-32 pb-20 md:pb-32">
-        <div className="max-w-5xl mx-auto text-center space-y-8 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-medium text-sm">
-            <Sparkles className="h-4 w-4" />
-            <span>AI-Powered Health Intelligence Platform</span>
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight">
-            Decode Every
-            <span className="block bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent">
-              Product Label
-            </span>
-            <span className="block">In Seconds</span>
-          </h1>
-          
-          <p className="text-xl md:text-2xl lg:text-3xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Make informed decisions with AI-powered ingredient analysis. Protect your health with science-backed insights.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <Button 
-              size="lg" 
-              className="text-lg h-14 px-8 shadow-lg hover:shadow-xl transition-all"
-              onClick={() => navigate(user ? "/scan" : "/auth")}
-            >
-              <Camera className="mr-2 h-5 w-5" />
-              {user ? "Start Scanning" : "Get Started Free"}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="text-lg h-14 px-8"
-              onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Learn More
-            </Button>
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10" />
+        
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
+        
+        <div className="container relative z-10 mx-auto px-4 sm:px-6 py-12 sm:py-20">
+          <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 animate-fade-in">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent leading-tight py-2">
+              Purelytics
+            </h1>
+            <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+              <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground leading-relaxed">
+                Take Control of Your Health Today
+              </p>
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Scan any product and get instant insights into its ingredients with our advanced AI technology. Make informed decisions for a healthier lifestyle.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 sm:pt-8 px-4 sm:px-0">
+              <Button
+                size="lg"
+                onClick={() => navigate(user ? "/scan" : "/auth")}
+                className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-105 transition-transform duration-200"
+              >
+                {user ? "Start Scanning" : "Get Started Free"}
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 hover:scale-105 transition-transform duration-200"
+              >
+                Learn More
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -298,23 +301,23 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20 md:py-32">
-        <div className="max-w-4xl mx-auto text-center space-y-8 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 rounded-3xl p-12 md:p-16 border border-primary/20 shadow-2xl">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+      <section className="container mx-auto px-4 py-12 sm:py-20 md:py-32">
+        <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 rounded-3xl p-8 sm:p-12 md:p-16 border border-primary/20 shadow-2xl">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight px-4 sm:px-0">
             Take Control of
-            <span className="block text-primary">Your Health Today</span>
+            <span className="block text-primary mt-2">Your Health Today</span>
           </h2>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto px-4 sm:px-0">
             Start making informed decisions about the products you use every day.
           </p>
           <Button 
             size="lg" 
-            className="text-lg h-14 px-8 shadow-lg hover:shadow-xl transition-all"
+            className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 shadow-lg hover:shadow-xl transition-all"
             onClick={() => navigate(user ? "/scan" : "/auth")}
           >
-            <Camera className="mr-2 h-5 w-5" />
+            <Camera className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
             {user ? "Start Scanning Now" : "Get Started Free"}
-            <ArrowRight className="ml-2 h-5 w-5" />
+            <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         </div>
       </section>

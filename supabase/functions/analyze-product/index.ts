@@ -115,7 +115,7 @@ Return ONLY a JSON object:
     // Fetch ingredient toxicity data
     const { data: ingredientData } = await supabase.from("ingredients").select("*");
 
-    // Calculate toxicity score
+    // Calculate toxicity score with improved algorithm
     const flaggedIngredients: any[] = [];
     let totalHazardScore = 0;
     let matchedCount = 0;
@@ -137,9 +137,33 @@ Return ONLY a JSON object:
       }
     }
 
-    const avgHazardScore = matchedCount > 0 ? totalHazardScore / matchedCount : 1;
-    const toxiscore = Math.max(0, Math.min(100, 100 - (avgHazardScore * 20)));
-    const colorCode = toxiscore >= 70 ? "green" : toxiscore >= 40 ? "yellow" : "red";
+    // Improved scoring logic
+    let toxiscore: number;
+    let colorCode: string;
+    
+    if (matchedCount === 0) {
+      // If no ingredients matched our database, assume it's relatively safe but unknown
+      toxiscore = 75; // Neutral score for unknown products
+      colorCode = "yellow";
+    } else {
+      // Calculate based on actual hazard scores (1-5 scale)
+      const avgHazardScore = totalHazardScore / matchedCount;
+      
+      // Convert hazard score to toxiscore: 
+      // Hazard 1 = 95-100, Hazard 2 = 80-94, Hazard 3 = 60-79, Hazard 4 = 40-59, Hazard 5 = 0-39
+      toxiscore = Math.round(100 - ((avgHazardScore - 1) * 21.25));
+      toxiscore = Math.max(0, Math.min(100, toxiscore));
+      
+      // Also factor in the percentage of flagged ingredients
+      const flaggedPercentage = (matchedCount / extractedData.ingredients.length) * 100;
+      if (flaggedPercentage > 50) {
+        toxiscore = Math.round(toxiscore * 0.85); // Reduce score if more than half are problematic
+      }
+      
+      colorCode = toxiscore >= 70 ? "green" : toxiscore >= 40 ? "yellow" : "red";
+    }
+    
+    console.log(`Score calculation: ${matchedCount}/${extractedData.ingredients.length} ingredients matched, avgHazard: ${matchedCount > 0 ? (totalHazardScore / matchedCount).toFixed(2) : 'N/A'}, final score: ${toxiscore}`);
 
     // Generate AI summary
     const summaryResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

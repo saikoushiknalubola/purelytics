@@ -16,31 +16,60 @@ const Scan = () => {
 
   const startCamera = async () => {
     try {
+      // Stop any existing stream first
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Try with more flexible constraints
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: "environment",
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
       });
       
+      setStream(mediaStream);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        setStream(mediaStream);
         
-        // Wait for video metadata to load before activating camera
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().then(() => {
-            setIsCameraActive(true);
-          }).catch((error) => {
-            console.error("Error playing video:", error);
-            toast.error("Failed to start camera preview");
-          });
-        };
+        // Wait for metadata to load before playing
+        await new Promise((resolve, reject) => {
+          if (!videoRef.current) {
+            reject(new Error("Video element not found"));
+            return;
+          }
+          
+          videoRef.current.onloadedmetadata = () => {
+            resolve(true);
+          };
+          
+          // Timeout after 5 seconds
+          setTimeout(() => reject(new Error("Camera timeout")), 5000);
+        });
+        
+        // Play the video
+        await videoRef.current.play();
+        setIsCameraActive(true);
       }
-    } catch (error) {
-      toast.error("Failed to access camera. Please allow camera permissions.");
+    } catch (error: any) {
       console.error("Camera error:", error);
+      
+      let errorMessage = "Could not access camera. ";
+      
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        errorMessage += "Please allow camera permissions in your browser settings.";
+      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+        errorMessage += "No camera found on this device.";
+      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
+        errorMessage += "Camera is already in use by another application. Please close other apps using the camera.";
+      } else {
+        errorMessage += "Please try again or use the upload option.";
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
@@ -128,87 +157,126 @@ const Scan = () => {
         </Button>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4">
-        {!isCameraActive ? (
-          <div className="text-center space-y-6 max-w-md">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold text-foreground">
-                Scan & Reveal
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Hidden Ingredients Exposed
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={startCamera}
-                disabled={isScanning}
-              >
-                <Camera className="mr-2 h-5 w-5" />
-                Open Camera
-              </Button>
-
-              <Button
-                size="lg"
-                variant="secondary"
-                className="w-full"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isScanning}
-              >
-                <Upload className="mr-2 h-5 w-5" />
-                Upload Image
-              </Button>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-            </div>
-
-            {isScanning && (
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Analyzing product...</span>
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8 space-y-3 animate-fade-in">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Scan & Reveal</h1>
+            <p className="text-muted-foreground text-lg">
+              Discover what's really in your products with instant AI analysis
+            </p>
+          </div>
+          
+          <div className="backdrop-blur-sm bg-card/50 border-2 rounded-2xl shadow-xl p-6 md:p-8">
+            {!isCameraActive ? (
+              <div className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Button
+                    size="lg"
+                    onClick={startCamera}
+                    disabled={isScanning}
+                    className="w-full h-32 flex-col space-y-3 bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-105 transition-transform duration-200"
+                  >
+                    <Camera className="h-10 w-10" />
+                    <div>
+                      <div className="font-semibold text-lg">Open Camera</div>
+                      <div className="text-sm opacity-90">Scan product in real-time</div>
+                    </div>
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isScanning}
+                    className="w-full h-32 flex-col space-y-3 hover:scale-105 transition-transform duration-200"
+                  >
+                    <Upload className="h-10 w-10" />
+                    <div>
+                      <div className="font-semibold text-lg">Upload Image</div>
+                      <div className="text-sm text-muted-foreground">Choose from gallery</div>
+                    </div>
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </div>
+                
+                {isScanning && (
+                  <div className="flex flex-col items-center justify-center gap-4 py-8 animate-pulse">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <div className="text-center space-y-2">
+                      <p className="text-lg font-semibold text-foreground">Analyzing Product</p>
+                      <p className="text-sm text-muted-foreground">Extracting ingredients and calculating safety score...</p>
+                    </div>
+                  </div>
+                )}
+                
+                {!isScanning && (
+                  <div className="bg-muted/50 rounded-lg p-6 space-y-3 mt-6">
+                    <h3 className="font-semibold text-foreground">Tips for Best Results:</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary mt-0.5">•</span>
+                        <span>Ensure the ingredient list is clearly visible and well-lit</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary mt-0.5">•</span>
+                        <span>Hold the camera steady and avoid blur</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary mt-0.5">•</span>
+                        <span>Make sure the text is not cut off at the edges</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="relative rounded-lg overflow-hidden bg-black">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full aspect-video object-cover"
+                  />
+                  <div className="absolute inset-0 border-4 border-primary/30 rounded-lg pointer-events-none" />
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={captureImage}
+                    disabled={isScanning}
+                    className="flex-1 h-14 text-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    {isScanning ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="mr-2 h-5 w-5" />
+                        Capture & Analyze
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={stopCamera}
+                    disabled={isScanning}
+                    className="h-14 px-8"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             )}
           </div>
-        ) : (
-          <div className="w-full max-w-2xl space-y-4">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full rounded-lg shadow-lg"
-            />
-
-            <div className="flex gap-4">
-              <Button
-                size="lg"
-                className="flex-1"
-                onClick={captureImage}
-                disabled={isScanning}
-              >
-                {isScanning ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Analyzing...
-                  </>
-                ) : (
-                  "Capture & Analyze"
-                )}
-              </Button>
-              <Button size="lg" variant="outline" onClick={stopCamera}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
+        </div>
       </main>
     </div>
   );
