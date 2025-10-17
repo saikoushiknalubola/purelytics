@@ -19,43 +19,48 @@ const Scan = () => {
       // Stop any existing stream first
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
+        setStream(null);
       }
       
-      // Try with more flexible constraints
+      console.log("Requesting camera access...");
+      
+      // Request camera with simpler constraints first
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+        video: {
+          facingMode: "environment"
         },
+        audio: false
       });
       
+      console.log("Camera access granted, stream obtained");
+      
+      if (!videoRef.current) {
+        console.error("Video element not available");
+        mediaStream.getTracks().forEach(track => track.stop());
+        throw new Error("Video element not ready");
+      }
+      
+      videoRef.current.srcObject = mediaStream;
       setStream(mediaStream);
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        
-        // Wait for metadata to load before playing
-        await new Promise((resolve, reject) => {
-          if (!videoRef.current) {
-            reject(new Error("Video element not found"));
-            return;
-          }
-          
-          videoRef.current.onloadedmetadata = () => {
-            resolve(true);
-          };
-          
-          // Timeout after 5 seconds
-          setTimeout(() => reject(new Error("Camera timeout")), 5000);
-        });
-        
-        // Play the video
-        await videoRef.current.play();
-        setIsCameraActive(true);
-      }
+      // Wait for video to be ready and play
+      videoRef.current.onloadedmetadata = () => {
+        console.log("Video metadata loaded");
+        if (videoRef.current) {
+          videoRef.current.play()
+            .then(() => {
+              console.log("Video playing successfully");
+              setIsCameraActive(true);
+            })
+            .catch(err => {
+              console.error("Error playing video:", err);
+              toast.error("Failed to start camera preview");
+            });
+        }
+      };
+      
     } catch (error: any) {
-      console.error("Camera error:", error);
+      console.error("Camera error:", error.name, error.message);
       
       let errorMessage = "Could not access camera. ";
       
@@ -64,7 +69,23 @@ const Scan = () => {
       } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
         errorMessage += "No camera found on this device.";
       } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
-        errorMessage += "Camera is already in use by another application. Please close other apps using the camera.";
+        errorMessage += "Camera is already in use. Please close other apps using the camera.";
+      } else if (error.name === "OverconstrainedError") {
+        errorMessage += "Camera doesn't support the requested settings. Trying alternative...";
+        // Fallback: try again with user-facing camera
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          if (videoRef.current) {
+            videoRef.current.srcObject = fallbackStream;
+            setStream(fallbackStream);
+            await videoRef.current.play();
+            setIsCameraActive(true);
+            toast.success("Camera started with front camera");
+            return;
+          }
+        } catch (fallbackError) {
+          console.error("Fallback camera failed:", fallbackError);
+        }
       } else {
         errorMessage += "Please try again or use the upload option.";
       }
@@ -147,12 +168,17 @@ const Scan = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="p-4 flex items-center justify-between border-b border-border">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+      <header className="p-4 flex items-center justify-between border-b border-border bg-card/50 backdrop-blur-sm">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="hover:bg-primary/10">
           ← Home
         </Button>
-        <h1 className="text-xl font-semibold">Purelytics</h1>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+            <span className="text-sm font-bold text-primary-foreground">P</span>
+          </div>
+          <h1 className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Purelytics</h1>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="hover:bg-primary/10">
           Profile
         </Button>
       </header>

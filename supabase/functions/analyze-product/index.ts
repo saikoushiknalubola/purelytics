@@ -165,7 +165,7 @@ Return ONLY a JSON object:
     
     console.log(`Score calculation: ${matchedCount}/${extractedData.ingredients.length} ingredients matched, avgHazard: ${matchedCount > 0 ? (totalHazardScore / matchedCount).toFixed(2) : 'N/A'}, final score: ${toxiscore}`);
 
-    // Generate AI summary
+    // Generate AI summary with detailed safety analysis
     const summaryResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -176,12 +176,27 @@ Return ONLY a JSON object:
         model: "google/gemini-2.5-flash",
         messages: [{
           role: "user",
-          content: `Product: ${extractedData.productName}
+          content: `Analyze this product for safety:
+Product Name: ${extractedData.productName}
+Brand: ${extractedData.brand}
+Category: ${extractedData.category}
 ToxiScore: ${toxiscore}/100
-Flagged: ${flaggedIngredients.map((i) => i.name).join(", ") || "None"}
+Color Code: ${colorCode}
+All Ingredients: ${extractedData.ingredients.join(", ")}
+Flagged Harmful Ingredients: ${flaggedIngredients.map((i) => `${i.name} (Hazard: ${i.hazard_score}/5 - ${i.reason})`).join(", ") || "None detected"}
 
-Return JSON:
-{"summary": "brief safety summary", "alternatives": [{"name": "product", "brand": "brand", "score": 85}]}`
+Provide:
+1. A concise safety summary (2-3 sentences) explaining the score and key concerns
+2. Recommend 3-5 safer alternative products with realistic scores (70-95) based on the category
+
+Return ONLY valid JSON:
+{
+  "summary": "Clear safety analysis explaining the score and main concerns",
+  "alternatives": [
+    {"name": "Specific Product Name", "brand": "Real Brand", "score": 88},
+    {"name": "Another Product", "brand": "Brand Name", "score": 92}
+  ]
+}`
         }],
       }),
     });
