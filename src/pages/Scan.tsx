@@ -173,10 +173,9 @@ const Scan = () => {
           ← Home
         </Button>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center hover:scale-110 transition-transform">
             <span className="text-sm font-bold text-primary-foreground">P</span>
           </div>
-          <h1 className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Purelytics</h1>
         </div>
         <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="hover:bg-primary/10">
           Profile

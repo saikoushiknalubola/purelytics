@@ -82,12 +82,9 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center hover:scale-110 transition-transform">
                 <span className="text-xl font-bold text-primary-foreground">P</span>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                Purelytics
-              </span>
             </div>
 
             {/* Desktop Navigation */}
@@ -334,9 +331,6 @@ const Index = () => {
                 <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
                   <span className="text-xl font-bold text-primary-foreground">P</span>
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  Purelytics
-                </span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Empowering consumers with transparent product safety insights through advanced AI technology.
@@ -387,8 +381,8 @@ const Index = () => {
           
           <div className="mt-16 pt-8 border-t border-border/50">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-              <p>&copy; 2024 Purelytics. All rights reserved.</p>
-              <p className="text-xs">Made with ❤️ for healthier choices</p>
+              <p>&copy; 2025 Purelytics. All rights reserved.</p>
+              <p className="text-xs">Made in India 🇮🇳</p>
             </div>
           </div>
         </div>
