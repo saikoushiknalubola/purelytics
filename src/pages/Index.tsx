@@ -82,8 +82,8 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center hover:scale-110 transition-transform">
-                <span className="text-xl font-bold text-primary-foreground">P</span>
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
+                <span className="text-base font-bold text-primary-foreground tracking-tight">PL</span>
               </div>
             </div>
 
@@ -328,8 +328,8 @@ const Index = () => {
           <div className="grid md:grid-cols-4 gap-12">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                  <span className="text-xl font-bold text-primary-foreground">P</span>
+                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
+                  <span className="text-base font-bold text-primary-foreground tracking-tight">PL</span>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">

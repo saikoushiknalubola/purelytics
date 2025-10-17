@@ -111,52 +111,69 @@ const Result = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="p-4 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur-sm">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/scan")}>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <header className="sticky top-0 z-50 p-4 flex items-center justify-between border-b border-border/50 bg-card/80 backdrop-blur-lg shadow-sm">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate("/scan")}
+          className="hover:bg-primary/10 transition-all"
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Scan Again
         </Button>
-        <h1 className="text-lg font-bold">Purelytics</h1>
-        <Button variant="ghost" size="sm" onClick={handleShare}>
+        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+          <span className="text-base font-bold text-primary-foreground tracking-tight">PL</span>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleShare}
+          className="hover:bg-primary/10 transition-all"
+        >
           <Share2 className="h-4 w-4" />
         </Button>
       </header>
 
-      <main className="p-4 max-w-2xl mx-auto space-y-6">
-        <Card className="p-6 space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold">{product.name}</h1>
+      <main className="container mx-auto px-4 py-8 max-w-3xl space-y-6 animate-fade-in">
+        <Card className="p-8 space-y-8 bg-card/80 backdrop-blur-sm border-2 hover:shadow-xl transition-all">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{product.name}</h1>
             {product.brand && (
-              <p className="text-muted-foreground">{product.brand}</p>
+              <p className="text-lg text-muted-foreground font-medium">{product.brand}</p>
             )}
             {product.category && (
-              <Badge variant="secondary">{product.category}</Badge>
+              <Badge variant="secondary" className="text-sm px-4 py-1">{product.category}</Badge>
             )}
           </div>
 
           <ToxiScoreMeter score={product.toxiscore} colorCode={product.color_code} />
 
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">{product.summary}</p>
+          <div className="text-center bg-secondary/20 rounded-xl p-6">
+            <p className="text-base text-foreground/90 leading-relaxed">{product.summary}</p>
           </div>
         </Card>
 
         {product.flagged_ingredients && product.flagged_ingredients.length > 0 && (
-          <Card className="p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              <h2 className="text-lg font-semibold">Flagged Ingredients</h2>
+          <Card className="p-8 space-y-6 bg-card/80 backdrop-blur-sm border-2 hover:shadow-xl transition-all">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-warning/20 to-warning/5 flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-warning" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Flagged Ingredients</h2>
+                <p className="text-sm text-muted-foreground">Ingredients that require attention</p>
+              </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {product.flagged_ingredients.map((ingredient, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-secondary/50 rounded-lg space-y-1"
+                  className="p-5 bg-gradient-to-br from-secondary/50 to-secondary/20 hover:from-secondary/60 hover:to-secondary/30 rounded-xl space-y-2 border border-border/50 transition-all hover:shadow-md"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium">{ingredient.name}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-semibold text-lg">{ingredient.name}</p>
                     <Badge
                       variant={
                         ingredient.hazard_score >= 4
@@ -165,11 +182,12 @@ const Result = () => {
                           ? "default"
                           : "secondary"
                       }
+                      className="text-sm px-3 py-1"
                     >
                       Risk: {ingredient.hazard_score}/5
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {ingredient.reason}
                   </p>
                 </div>
@@ -179,24 +197,29 @@ const Result = () => {
         )}
 
         {product.alternatives && product.alternatives.length > 0 && (
-          <Card className="p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-success" />
-              <h2 className="text-lg font-semibold">Safer Alternatives</h2>
+          <Card className="p-8 space-y-6 bg-card/80 backdrop-blur-sm border-2 hover:shadow-xl transition-all">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-success/20 to-success/5 flex items-center justify-center">
+                <CheckCircle2 className="h-6 w-6 text-success" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Safer Alternatives</h2>
+                <p className="text-sm text-muted-foreground">Healthier products you can try</p>
+              </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {product.alternatives.map((alt, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-secondary/30 rounded-lg flex items-center justify-between"
+                  className="p-5 bg-gradient-to-br from-secondary/30 to-secondary/10 hover:from-secondary/40 hover:to-secondary/20 rounded-xl flex items-center justify-between border border-border/50 transition-all hover:shadow-md"
                 >
                   <div>
-                    <p className="font-medium">{alt.name}</p>
-                    <p className="text-sm text-muted-foreground">{alt.brand}</p>
+                    <p className="font-semibold text-lg">{alt.name}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{alt.brand}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-success">
+                    <span className="text-lg font-bold text-success">
                       {alt.score}/100
                     </span>
                   </div>
@@ -206,7 +229,11 @@ const Result = () => {
           </Card>
         )}
 
-        <Button size="lg" className="w-full" onClick={() => navigate("/")}>
+        <Button 
+          size="lg" 
+          className="w-full h-14 text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105" 
+          onClick={() => navigate("/")}
+        >
           Scan Another Product
         </Button>
       </main>
