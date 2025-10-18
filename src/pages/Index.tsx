@@ -92,6 +92,8 @@ const Index = () => {
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
               <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How it Works</a>
               <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors">Reviews</a>
+              <Button variant="ghost" onClick={() => navigate("/about")}>About Us</Button>
+              <Button variant="ghost" onClick={() => navigate("/contact")}>Contact</Button>
               {user ? (
                 <>
                   <Button variant="ghost" onClick={() => navigate("/profile")}>Profile</Button>
@@ -123,6 +125,8 @@ const Index = () => {
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</a>
               <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>How it Works</a>
               <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Reviews</a>
+              <button onClick={() => { navigate("/about"); setMobileMenuOpen(false); }} className="text-muted-foreground hover:text-foreground transition-colors text-left">About Us</button>
+              <button onClick={() => { navigate("/contact"); setMobileMenuOpen(false); }} className="text-muted-foreground hover:text-foreground transition-colors text-left">Contact</button>
               {user ? (
                 <>
                   <Button variant="ghost" onClick={() => navigate("/profile")} className="justify-start">Profile</Button>
@@ -155,7 +159,9 @@ const Index = () => {
         <div className="container relative z-10 mx-auto px-4 sm:px-6 py-6 md:py-12">
           <div className="max-w-4xl mx-auto text-center space-y-4 md:space-y-8 animate-fade-in">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-accent leading-tight py-2 animate-scale-in">
-              Purelytics
+              <span className="inline-block animate-[pulse_2s_ease-in-out_infinite] hover:scale-110 transition-transform duration-300">
+                Purelytics
+              </span>
             </h1>
             <div className="space-y-3 md:space-y-6 px-2 sm:px-4 md:px-0">
               <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground leading-tight animate-fade-in" style={{ animationDelay: '0.2s' }}>
@@ -382,9 +388,17 @@ const Index = () => {
           <div className="mt-16 pt-8 border-t border-border/50">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
               <p className="text-muted-foreground">&copy; 2025 Purelytics. All rights reserved.</p>
-              <div className="flex items-center gap-2 font-semibold text-foreground">
-                <span className="text-lg">🇮🇳</span>
-                <span>Made in India</span>
+              <div className="flex items-center gap-3 font-semibold text-foreground">
+                <div className="relative">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-orange-500 via-white to-green-500 animate-spin" style={{ animationDuration: '3s' }} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-3 w-3 rounded-full bg-primary" />
+                  </div>
+                </div>
+                <span className="text-lg bg-clip-text text-transparent bg-gradient-to-r from-orange-500 via-primary to-green-500 font-bold">
+                  Proudly Made in India
+                </span>
+                <span className="text-2xl animate-pulse">🇮🇳</span>
               </div>
             </div>
           </div>
