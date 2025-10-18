@@ -85,8 +85,8 @@ const Auth = () => {
 
       <Card className="w-full max-w-md p-8 space-y-6 backdrop-blur-sm bg-card/80 border-2 shadow-2xl relative z-10 animate-fade-in">
         <div className="text-center space-y-4">
-          <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
-            <span className="text-xl font-bold text-primary-foreground tracking-tight">PL</span>
+          <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-xl hover:scale-110 transition-all duration-300 animate-scale-in">
+            <span className="text-xl font-black text-primary-foreground tracking-wider">PLY</span>
           </div>
           <div>
             <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">

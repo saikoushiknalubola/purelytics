@@ -122,8 +122,8 @@ const Result = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Scan Again
         </Button>
-        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-          <span className="text-base font-bold text-primary-foreground tracking-tight">PL</span>
+        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-lg hover:shadow-primary/50 hover:scale-110 transition-all duration-300">
+          <span className="text-sm font-black text-primary-foreground tracking-wider">PLY</span>
         </div>
         <Button 
           variant="ghost" 

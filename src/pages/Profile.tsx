@@ -83,8 +83,8 @@ const Profile = () => {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Home
             </Button>
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-              <span className="text-base font-bold text-primary-foreground tracking-tight">PL</span>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-lg hover:shadow-primary/50 hover:scale-110 transition-all duration-300">
+              <span className="text-sm font-black text-primary-foreground tracking-wider">PLY</span>
             </div>
             <Button 
               variant="ghost" 
@@ -103,8 +103,8 @@ const Profile = () => {
         {/* Profile Card */}
         <Card className="p-8 space-y-6 bg-card/80 backdrop-blur-sm border-2 hover:shadow-xl transition-all">
           <div className="flex items-center gap-4">
-            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
-              <span className="text-3xl font-bold text-primary-foreground tracking-tight">PL</span>
+            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-lg hover:shadow-primary/50 transition-all duration-300 hover:scale-105 animate-scale-in">
+              <span className="text-2xl font-black text-primary-foreground tracking-wider">PLY</span>
             </div>
             <div className="flex-1">
               <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Your Profile</h2>

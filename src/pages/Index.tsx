@@ -81,9 +81,9 @@ const Index = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border/50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
-                <span className="text-base font-bold text-primary-foreground tracking-tight">PL</span>
+            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate("/")}>
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg group-hover:shadow-primary/50">
+                <span className="text-sm font-black text-primary-foreground tracking-wider">PLY</span>
               </div>
             </div>
 
@@ -143,42 +143,42 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[85vh] md:min-h-screen flex items-center justify-center overflow-hidden pt-20 md:pt-0">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10" />
         
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/4 left-1/4 w-48 h-48 md:w-72 md:h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 md:w-96 md:h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
         
-        <div className="container relative z-10 mx-auto px-4 sm:px-6 py-12 sm:py-20">
-          <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 animate-fade-in">
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent leading-tight py-2">
+        <div className="container relative z-10 mx-auto px-4 sm:px-6 py-6 md:py-12">
+          <div className="max-w-4xl mx-auto text-center space-y-4 md:space-y-8 animate-fade-in">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-accent leading-tight py-2 animate-scale-in">
               Purelytics
             </h1>
-            <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
-              <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground leading-relaxed">
+            <div className="space-y-3 md:space-y-6 px-2 sm:px-4 md:px-0">
+              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground leading-tight animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 Take Control of Your Health Today
               </p>
-              <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.4s' }}>
                 Scan any product and get instant insights into its ingredients with our advanced AI technology. Make informed decisions for a healthier lifestyle.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 sm:pt-8 px-4 sm:px-0">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-4 md:pt-8 px-2 sm:px-4 md:px-0 animate-fade-in" style={{ animationDelay: '0.6s' }}>
               <Button
                 size="lg"
                 onClick={() => navigate(user ? "/scan" : "/auth")}
-                className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-105 transition-transform duration-200"
+                className="text-sm sm:text-base md:text-lg px-6 sm:px-8 py-4 sm:py-5 md:py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-primary/50"
               >
                 {user ? "Start Scanning" : "Get Started Free"}
-                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 hover:scale-105 transition-transform duration-200"
+                className="text-sm sm:text-base md:text-lg px-6 sm:px-8 py-4 sm:py-5 md:py-6 hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50 hover:bg-primary/5"
               >
                 Learn More
               </Button>
@@ -328,8 +328,8 @@ const Index = () => {
           <div className="grid md:grid-cols-4 gap-12">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
-                  <span className="text-base font-bold text-primary-foreground tracking-tight">PL</span>
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-lg">
+                  <span className="text-sm font-black text-primary-foreground tracking-wider">PLY</span>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
@@ -380,9 +380,12 @@ const Index = () => {
           </div>
           
           <div className="mt-16 pt-8 border-t border-border/50">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-              <p>&copy; 2025 Purelytics. All rights reserved.</p>
-              <p className="text-xs">Made in India 🇮🇳</p>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+              <p className="text-muted-foreground">&copy; 2025 Purelytics. All rights reserved.</p>
+              <div className="flex items-center gap-2 font-semibold text-foreground">
+                <span className="text-lg">🇮🇳</span>
+                <span>Made in India</span>
+              </div>
             </div>
           </div>
         </div>
