@@ -5,7 +5,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 const ProductExtractionSchema = z.object({
   productName: z.string().trim().min(1).max(200),
   brand: z.string().trim().max(100).default("Unknown"),
-  category: z.enum(["food", "cosmetic", "cleaning", "pharmaceutical"]),
+  category: z.enum(["food", "cosmetic", "cleaning", "pharmaceutical", "beverage", "supplement", "personal_care"]),
   ingredients: z.array(z.string().trim().min(1).max(100)).min(1).max(500),
 });
 
@@ -32,25 +32,42 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+
+    if (!supabaseUrl || !supabaseKey || !lovableApiKey) {
+      console.error("Missing environment variables");
+      throw new Error("Server configuration error");
+    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { image } = await req.json();
+    
+    if (!image) {
+      throw new Error("No image provided");
+    }
 
-    const authHeader = req.headers.get("Authorization")!;
+    console.log("Image received, validating authentication...");
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header");
+    }
+
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
+      console.error("Authentication error:", authError);
       throw new Error("Unauthorized");
     }
 
-    console.log("Analyzing product image with AI...");
+    console.log(`Analyzing product for user: ${user.id}`);
 
     // Use Lovable AI to analyze the image
+    console.log("Sending image to Lovable AI for analysis...");
     const aiResponse = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -67,17 +84,25 @@ Deno.serve(async (req) => {
               content: [
                 {
                   type: "text",
-                  text: `Analyze this product image. Extract:
-1. Product name and brand
-2. Category (food/cosmetic/cleaning/pharmaceutical)
-3. All ingredients from the label
+                  text: `Analyze this product image and extract the following information:
 
-Return ONLY a JSON object:
+1. Product name (the main product name visible on the label)
+2. Brand name (the manufacturer or brand)
+3. Category: Choose ONE from: food, cosmetic, cleaning, pharmaceutical, beverage, supplement, personal_care
+4. ALL ingredients listed on the product (read every ingredient carefully)
+
+IMPORTANT: 
+- Extract ALL ingredients, even if there are many
+- Include preservatives, additives, colors, flavors
+- If you can't read some ingredients clearly, do your best to identify them
+- Be thorough and accurate
+
+Return ONLY a valid JSON object in this exact format:
 {
-  "productName": "string",
-  "brand": "string",
-  "category": "string",
-  "ingredients": ["ingredient1", "ingredient2"]
+  "productName": "Full Product Name",
+  "brand": "Brand Name",
+  "category": "food",
+  "ingredients": ["ingredient1", "ingredient2", "ingredient3", ...]
 }`,
                 },
                 {
@@ -87,44 +112,83 @@ Return ONLY a JSON object:
               ],
             },
           ],
+          max_tokens: 2000,
         }),
       },
     );
 
     if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error("AI API error:", aiResponse.status, errorText);
+      
+      if (aiResponse.status === 429) {
+        throw new Error("AI service is busy. Please try again in a moment.");
+      }
+      if (aiResponse.status === 402) {
+        throw new Error("AI service requires payment. Please contact support.");
+      }
       throw new Error(`AI analysis failed: ${aiResponse.statusText}`);
     }
 
     const aiData = await aiResponse.json();
+    console.log("AI response received");
+    
+    if (!aiData.choices || !aiData.choices[0] || !aiData.choices[0].message) {
+      console.error("Invalid AI response structure:", JSON.stringify(aiData));
+      throw new Error("Invalid AI response");
+    }
+
     const content = aiData.choices[0].message.content;
+    console.log("Parsing AI response...");
+    
     const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || content.match(/(\{[\s\S]*\})/);
+    
+    if (!jsonMatch) {
+      console.error("No JSON found in AI response:", content);
+      throw new Error("Could not extract product information from image. Please try with a clearer photo of the ingredients list.");
+    }
     
     // Validate AI response with Zod schema
     let extractedData;
     try {
-      const parsedData = JSON.parse(jsonMatch ? jsonMatch[1] : content);
+      const parsedData = JSON.parse(jsonMatch[1]);
+      console.log("Parsed product data:", JSON.stringify(parsedData));
       extractedData = ProductExtractionSchema.parse(parsedData);
+      console.log(`Successfully extracted: ${extractedData.productName} with ${extractedData.ingredients.length} ingredients`);
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error("AI product extraction validation failed:", error.errors);
-        throw new Error("AI returned invalid product data. Please try again with a clearer image.");
+        throw new Error("Could not validate product data. Please ensure the image shows the ingredients list clearly.");
       }
-      throw error;
+      console.error("JSON parsing error:", error);
+      throw new Error("Could not read product information. Please try with a better photo.");
     }
 
     // Fetch ingredient toxicity data
-    const { data: ingredientData } = await supabase.from("ingredients").select("*");
+    console.log("Fetching ingredient database...");
+    const { data: ingredientData, error: dbError } = await supabase.from("ingredients").select("*");
+    
+    if (dbError) {
+      console.error("Database error:", dbError);
+      throw new Error("Failed to access ingredient database");
+    }
+
+    console.log(`Database has ${ingredientData?.length || 0} ingredients`);
 
     // Calculate toxicity score with improved algorithm
     const flaggedIngredients: any[] = [];
     let totalHazardScore = 0;
     let matchedCount = 0;
 
+    console.log("Analyzing ingredients for toxicity...");
     for (const ingredient of extractedData.ingredients) {
       const ingredientLower = ingredient.toLowerCase().trim();
-      const match = ingredientData?.find((db: any) =>
-        ingredientLower.includes(db.name.toLowerCase()) || db.name.toLowerCase().includes(ingredientLower)
-      );
+      const match = ingredientData?.find((db: any) => {
+        const dbNameLower = db.name.toLowerCase();
+        return ingredientLower.includes(dbNameLower) || 
+               dbNameLower.includes(ingredientLower) ||
+               ingredientLower === dbNameLower;
+      });
 
       if (match) {
         matchedCount++;
@@ -134,8 +198,11 @@ Return ONLY a JSON object:
           reason: match.description,
           hazard_score: match.hazard_score,
         });
+        console.log(`Flagged ingredient: ${match.name} (hazard: ${match.hazard_score})`);
       }
     }
+
+    console.log(`Matched ${matchedCount} out of ${extractedData.ingredients.length} ingredients`);
 
     // Improved scoring logic
     let toxiscore: number;
@@ -166,6 +233,7 @@ Return ONLY a JSON object:
     console.log(`Score calculation: ${matchedCount}/${extractedData.ingredients.length} ingredients matched, avgHazard: ${matchedCount > 0 ? (totalHazardScore / matchedCount).toFixed(2) : 'N/A'}, final score: ${toxiscore}`);
 
     // Generate AI summary with detailed safety analysis
+    console.log("Generating safety summary and alternatives...");
     const summaryResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -176,32 +244,86 @@ Return ONLY a JSON object:
         model: "google/gemini-2.5-flash",
         messages: [{
           role: "user",
-          content: `Analyze this product for safety:
+          content: `You are a health and safety expert. Analyze this product:
+
 Product Name: ${extractedData.productName}
 Brand: ${extractedData.brand}
 Category: ${extractedData.category}
-ToxiScore: ${toxiscore}/100
-Color Code: ${colorCode}
+ToxiScore: ${toxiscore}/100 (${colorCode} zone)
+Total Ingredients: ${extractedData.ingredients.length}
+Flagged Ingredients: ${flaggedIngredients.length}
+
+${flaggedIngredients.length > 0 ? `
+Harmful Ingredients Found:
+${flaggedIngredients.map((i) => `- ${i.name} (Hazard Level: ${i.hazard_score}/5) - ${i.reason}`).join('\n')}
+` : 'No harmful ingredients detected in our database.'}
+
 All Ingredients: ${extractedData.ingredients.join(", ")}
-Flagged Harmful Ingredients: ${flaggedIngredients.map((i) => `${i.name} (Hazard: ${i.hazard_score}/5 - ${i.reason})`).join(", ") || "None detected"}
 
-Provide:
-1. A concise safety summary (2-3 sentences) explaining the score and key concerns
-2. Recommend 3-5 safer alternative products with realistic scores (70-95) based on the category
+Task:
+1. Write a clear 2-3 sentence safety summary that explains:
+   - What the ToxiScore means for this product
+   - The main health concerns (if any)
+   - Whether this product is generally safe to use
 
-Return ONLY valid JSON:
+2. Recommend 3-5 real alternative products from the same category that are safer
+   - Use actual product names and brands
+   - Provide realistic ToxiScore values (70-95 range for safer alternatives)
+   - Ensure alternatives are readily available in the market
+
+Return ONLY valid JSON in this format:
 {
-  "summary": "Clear safety analysis explaining the score and main concerns",
+  "summary": "Your 2-3 sentence safety analysis here",
   "alternatives": [
-    {"name": "Specific Product Name", "brand": "Real Brand", "score": 88},
-    {"name": "Another Product", "brand": "Brand Name", "score": 92}
+    {"name": "Specific Product Name", "brand": "Real Brand Name", "score": 88},
+    {"name": "Another Product Name", "brand": "Brand Name", "score": 92}
   ]
 }`
         }],
+        max_tokens: 1000,
       }),
     });
 
+    if (!summaryResponse.ok) {
+      console.error("Summary generation failed:", summaryResponse.status);
+      // Provide fallback summary
+      const fallbackSummary = {
+        summary: toxiscore >= 70 
+          ? `This product has a ToxiScore of ${toxiscore}/100, indicating it's relatively safe. ${flaggedIngredients.length > 0 ? 'Some ingredients require attention.' : 'No major concerns detected.'}`
+          : `This product has a ToxiScore of ${toxiscore}/100. ${flaggedIngredients.length} concerning ingredients were identified that may pose health risks.`,
+        alternatives: []
+      };
+      
+      console.log("Using fallback summary");
+      
+      // Save to database with fallback
+      const { data: product, error: insertError } = await supabase.from("products").insert({
+        user_id: user.id,
+        name: extractedData.productName,
+        brand: extractedData.brand,
+        category: extractedData.category,
+        ingredients_raw: extractedData.ingredients.join(", "),
+        toxiscore,
+        color_code: colorCode,
+        flagged_ingredients: flaggedIngredients,
+        summary: fallbackSummary.summary,
+        alternatives: [],
+      }).select().single();
+
+      if (insertError) {
+        console.error("Database insert error:", insertError);
+        throw new Error("Failed to save product analysis");
+      }
+
+      console.log(`Product saved with ID: ${product.id}`);
+      return new Response(JSON.stringify({ productId: product.id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const summaryData = await summaryResponse.json();
+    console.log("Summary generated");
+    
     const summaryContent = summaryData.choices[0].message.content;
     const summaryMatch = summaryContent.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || summaryContent.match(/(\{[\s\S]*\})/);
     
@@ -210,16 +332,24 @@ Return ONLY valid JSON:
     try {
       const parsedSummary = JSON.parse(summaryMatch ? summaryMatch[1] : summaryContent);
       summaryJson = SummarySchema.parse(parsedSummary);
+      console.log("Summary validated successfully");
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error("AI summary validation failed:", error.errors);
-        throw new Error("AI returned invalid summary data. Please try again.");
+        // Use fallback
+        summaryJson = {
+          summary: `This product has a ToxiScore of ${toxiscore}/100. ${flaggedIngredients.length > 0 ? `${flaggedIngredients.length} ingredients require attention.` : 'No major concerns detected.'}`,
+          alternatives: []
+        };
+      } else {
+        console.error("Summary parsing error:", error);
+        throw new Error("Could not generate product summary");
       }
-      throw error;
     }
 
     // Save to database
-    const { data: product } = await supabase.from("products").insert({
+    console.log("Saving product to database...");
+    const { data: product, error: insertError } = await supabase.from("products").insert({
       user_id: user.id,
       name: extractedData.productName,
       brand: extractedData.brand,
@@ -232,13 +362,48 @@ Return ONLY valid JSON:
       alternatives: summaryJson.alternatives,
     }).select().single();
 
-    return new Response(JSON.stringify({ productId: product.id }), {
+    if (insertError) {
+      console.error("Database insert error:", insertError);
+      throw new Error("Failed to save product analysis");
+    }
+
+    console.log(`✅ Analysis complete! Product ID: ${product.id}`);
+    console.log(`Product: ${extractedData.productName} | Score: ${toxiscore}/100 | Flagged: ${flaggedIngredients.length} ingredients`);
+
+    return new Response(JSON.stringify({ 
+      productId: product.id,
+      score: toxiscore,
+      productName: extractedData.productName 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
-    console.error("Error analyzing product:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+    console.error("❌ Error analyzing product:", error);
+    console.error("Error stack:", error.stack);
+    
+    let errorMessage = error.message || "An unexpected error occurred";
+    let statusCode = 500;
+
+    // Handle specific error cases
+    if (errorMessage.includes("Unauthorized") || errorMessage.includes("authentication")) {
+      statusCode = 401;
+      errorMessage = "Please sign in to scan products";
+    } else if (errorMessage.includes("Rate limit") || errorMessage.includes("429")) {
+      statusCode = 429;
+      errorMessage = "Too many requests. Please try again in a moment.";
+    } else if (errorMessage.includes("Payment") || errorMessage.includes("402")) {
+      statusCode = 402;
+      errorMessage = "Service temporarily unavailable. Please contact support.";
+    } else if (errorMessage.includes("image") || errorMessage.includes("photo")) {
+      statusCode = 400;
+      errorMessage = "Could not read the product image. Please try with a clearer photo showing the ingredients list.";
+    }
+
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: Deno.env.get("ENVIRONMENT") === "development" ? error.stack : undefined 
+    }), {
+      status: statusCode,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

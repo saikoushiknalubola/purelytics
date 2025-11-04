@@ -146,41 +146,85 @@ const Scan = () => {
   };
 
   const handleImageAnalysis = async (imageBlob: Blob) => {
+    console.log("Starting image analysis...");
     setIsScanning(true);
     stopCamera();
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // Check authentication first
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        console.error("Auth error:", authError);
         toast.error("Please sign in to scan products");
         navigate("/auth");
+        setIsScanning(false);
+        return;
+      }
+
+      console.log("User authenticated, converting image...");
+      
+      // Check image size
+      if (imageBlob.size > 10 * 1024 * 1024) { // 10MB limit
+        toast.error("Image is too large. Please use a smaller image (max 10MB)");
+        setIsScanning(false);
         return;
       }
 
       // Convert blob to base64
       const reader = new FileReader();
       reader.readAsDataURL(imageBlob);
+      
+      reader.onerror = () => {
+        console.error("FileReader error");
+        toast.error("Failed to read image. Please try again.");
+        setIsScanning(false);
+      };
+
       reader.onloadend = async () => {
-        const base64Image = reader.result as string;
+        try {
+          const base64Image = reader.result as string;
+          console.log("Image converted, sending to AI...");
 
-        const { data, error } = await supabase.functions.invoke("analyze-product", {
-          body: { image: base64Image },
-        });
+          const { data, error } = await supabase.functions.invoke("analyze-product", {
+            body: { image: base64Image },
+          });
 
-        if (error) {
-          throw error;
-        }
+          if (error) {
+            console.error("Function invocation error:", error);
+            throw new Error(error.message || "Failed to analyze product");
+          }
 
-        if (data.productId) {
-          navigate(`/result/${data.productId}`);
-        } else {
-          toast.error("Failed to analyze product");
+          console.log("Analysis response:", data);
+
+          if (data?.productId) {
+            console.log("Success! Navigating to result:", data.productId);
+            toast.success(`Analysis complete! ${data.productName || 'Product'} scored ${data.score || 0}/100`);
+            navigate(`/result/${data.productId}`);
+          } else if (data?.error) {
+            throw new Error(data.error);
+          } else {
+            throw new Error("No product ID returned from analysis");
+          }
+        } catch (innerError: any) {
+          console.error("Inner analysis error:", innerError);
+          const errorMessage = innerError.message || "Failed to analyze product";
+          
+          if (errorMessage.includes("clearer") || errorMessage.includes("image")) {
+            toast.error("Could not read the product label. Please take a clearer photo of the ingredients list.");
+          } else if (errorMessage.includes("sign in") || errorMessage.includes("Unauthorized")) {
+            toast.error("Please sign in to scan products");
+            navigate("/auth");
+          } else if (errorMessage.includes("Too many requests")) {
+            toast.error("Too many requests. Please wait a moment and try again.");
+          } else {
+            toast.error(errorMessage);
+          }
+          setIsScanning(false);
         }
       };
-    } catch (error) {
-      console.error("Analysis error:", error);
-      toast.error("Failed to analyze product. Please try again.");
-    } finally {
+    } catch (error: any) {
+      console.error("Outer analysis error:", error);
+      toast.error(error.message || "An unexpected error occurred. Please try again.");
       setIsScanning(false);
     }
   };
