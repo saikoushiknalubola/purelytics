@@ -105,3 +105,61 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(var(--primary), 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(var(--primary), 0.6);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.8s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.letter-animate {
+  display: inline-block;
+  opacity: 0;
+  animation: slideInLeft 0.5s ease-out forwards;
+}
+
+.letter-animate:nth-child(1) { animation-delay: 0.05s; }
+.letter-animate:nth-child(2) { animation-delay: 0.1s; }
+.letter-animate:nth-child(3) { animation-delay: 0.15s; }
+.letter-animate:nth-child(4) { animation-delay: 0.2s; }
+.letter-animate:nth-child(5) { animation-delay: 0.25s; }
+.letter-animate:nth-child(6) { animation-delay: 0.3s; }
+.letter-animate:nth-child(7) { animation-delay: 0.35s; }
+.letter-animate:nth-child(8) { animation-delay: 0.4s; }
+.letter-animate:nth-child(9) { animation-delay: 0.45s; }
+.letter-animate:nth-child(10) { animation-delay: 0.5s; }

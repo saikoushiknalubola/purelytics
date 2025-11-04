@@ -152,39 +152,42 @@ const Index = () => {
         
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-40 h-40 md:w-72 md:h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-48 h-48 md:w-96 md:h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/4 left-1/4 w-40 h-40 md:w-72 md:h-72 bg-primary/20 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-1/4 right-1/4 w-48 h-48 md:w-96 md:h-96 bg-accent/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
+          <div className="absolute top-1/2 right-1/3 w-32 h-32 md:w-64 md:h-64 bg-primary/10 rounded-full blur-2xl animate-float" style={{ animationDelay: '0.8s' }} />
         </div>
         
         <div className="container relative z-10 mx-auto px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto text-center space-y-3 sm:space-y-6 animate-fade-in">
+          <div className="max-w-4xl mx-auto text-center space-y-3 sm:space-y-6">
             <div className="space-y-2">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-accent leading-[1.1] animate-scale-in">
-                <span className="inline-block animate-[pulse_2s_ease-in-out_infinite] hover:scale-110 transition-transform duration-300">
-                  Purelytics
-                </span>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-foreground leading-[1.1]">
+                {"Purelytics".split("").map((letter, i) => (
+                  <span key={i} className="letter-animate inline-block hover:text-primary transition-colors duration-300">
+                    {letter}
+                  </span>
+                ))}
               </h1>
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground leading-tight animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground leading-tight animate-slide-in-left" style={{ animationDelay: '0.6s' }}>
                 Take Control of Your Health Today
               </p>
             </div>
-            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4 animate-slide-in-left" style={{ animationDelay: '0.8s' }}>
               Scan any product and get instant insights into its ingredients with our advanced AI technology. Make informed decisions for a healthier lifestyle.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 sm:pt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 sm:pt-6 animate-slide-in-left" style={{ animationDelay: '1s' }}>
               <Button
                 size="lg"
                 onClick={() => navigate(user ? "/scan" : "/auth")}
-                className="text-sm sm:text-base px-6 sm:px-8 h-11 sm:h-12 md:h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-primary/50"
+                className="text-sm sm:text-base px-6 sm:px-8 h-11 sm:h-12 md:h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground hover:scale-110 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-primary/50 animate-glow"
               >
                 {user ? "Start Scanning" : "Get Started Free"}
-                <ArrowRight className="ml-2 h-4 w-4 animate-pulse" />
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-sm sm:text-base px-6 sm:px-8 h-11 sm:h-12 md:h-14 hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50 hover:bg-primary/5"
+                className="text-sm sm:text-base px-6 sm:px-8 h-11 sm:h-12 md:h-14 hover:scale-110 transition-all duration-300 border-2 hover:border-primary/50 hover:bg-primary/5 hover:shadow-lg"
               >
                 Learn More
               </Button>
@@ -389,19 +392,33 @@ const Index = () => {
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
               <p className="text-muted-foreground">&copy; 2025 Purelytics. All rights reserved.</p>
               <div className="flex items-center gap-4 group cursor-default">
-                <div className="relative">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-500 via-white to-green-600 animate-spin shadow-lg" style={{ animationDuration: '4s' }} />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-primary/80 shadow-inner" />
-                  </div>
-                </div>
+                <svg className="h-12 w-12 group-hover:scale-110 transition-transform duration-300" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="48" fill="none" stroke="url(#gradient)" strokeWidth="2"/>
+                  <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{ stopColor: '#FF9933', stopOpacity: 1 }} />
+                      <stop offset="50%" style={{ stopColor: 'white', stopOpacity: 1 }} />
+                      <stop offset="100%" style={{ stopColor: '#138808', stopOpacity: 1 }} />
+                    </linearGradient>
+                  </defs>
+                  <g className="animate-spin origin-center" style={{ animationDuration: '8s', transformOrigin: '50% 50%' }}>
+                    <circle cx="50" cy="50" r="3" fill="#000080"/>
+                    {[...Array(24)].map((_, i) => {
+                      const angle = (i * 15 * Math.PI) / 180;
+                      const x1 = 50 + 8 * Math.cos(angle);
+                      const y1 = 50 + 8 * Math.sin(angle);
+                      const x2 = 50 + 40 * Math.cos(angle);
+                      const y2 = 50 + 40 * Math.sin(angle);
+                      return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000080" strokeWidth="0.8"/>;
+                    })}
+                  </g>
+                </svg>
                 <div className="flex flex-col">
-                  <span className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-orange-500 via-primary to-green-600 tracking-wide group-hover:scale-105 transition-transform duration-300">
-                    Proudly Made in India
+                  <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-primary to-green-600 tracking-wide group-hover:scale-105 transition-transform duration-300">
+                    Proudly Made in Bharat
                   </span>
                   <span className="text-xs text-muted-foreground font-medium">Empowering Health & Wellness</span>
                 </div>
-                <span className="text-3xl group-hover:scale-125 transition-transform duration-300">🇮🇳</span>
               </div>
             </div>
           </div>
