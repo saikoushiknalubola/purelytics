@@ -147,44 +147,44 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] md:min-h-screen flex items-center justify-center overflow-hidden pt-20 md:pt-0">
+      <section className="relative min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden pt-12 pb-8 md:pt-0 md:pb-0">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10" />
         
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-48 h-48 md:w-72 md:h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 md:w-96 md:h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/4 left-1/4 w-40 h-40 md:w-72 md:h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-48 h-48 md:w-96 md:h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
         
-        <div className="container relative z-10 mx-auto px-4 sm:px-6 py-6 md:py-12">
-          <div className="max-w-4xl mx-auto text-center space-y-4 md:space-y-8 animate-fade-in">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-accent leading-tight py-2 animate-scale-in">
-              <span className="inline-block animate-[pulse_2s_ease-in-out_infinite] hover:scale-110 transition-transform duration-300">
-                Purelytics
-              </span>
-            </h1>
-            <div className="space-y-3 md:space-y-6 px-2 sm:px-4 md:px-0">
-              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground leading-tight animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <div className="container relative z-10 mx-auto px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-3 sm:space-y-6 animate-fade-in">
+            <div className="space-y-2">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-accent leading-[1.1] animate-scale-in">
+                <span className="inline-block animate-[pulse_2s_ease-in-out_infinite] hover:scale-110 transition-transform duration-300">
+                  Purelytics
+                </span>
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground leading-tight animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 Take Control of Your Health Today
               </p>
-              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                Scan any product and get instant insights into its ingredients with our advanced AI technology. Make informed decisions for a healthier lifestyle.
-              </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-4 md:pt-8 px-2 sm:px-4 md:px-0 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+              Scan any product and get instant insights into its ingredients with our advanced AI technology. Make informed decisions for a healthier lifestyle.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 sm:pt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
               <Button
                 size="lg"
                 onClick={() => navigate(user ? "/scan" : "/auth")}
-                className="text-sm sm:text-base md:text-lg px-6 sm:px-8 py-4 sm:py-5 md:py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-primary/50"
+                className="text-sm sm:text-base px-6 sm:px-8 h-11 sm:h-12 md:h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-primary/50"
               >
                 {user ? "Start Scanning" : "Get Started Free"}
-                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
+                <ArrowRight className="ml-2 h-4 w-4 animate-pulse" />
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-sm sm:text-base md:text-lg px-6 sm:px-8 py-4 sm:py-5 md:py-6 hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50 hover:bg-primary/5"
+                className="text-sm sm:text-base px-6 sm:px-8 h-11 sm:h-12 md:h-14 hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50 hover:bg-primary/5"
               >
                 Learn More
               </Button>
@@ -386,19 +386,22 @@ const Index = () => {
           </div>
           
           <div className="mt-16 pt-8 border-t border-border/50">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
               <p className="text-muted-foreground">&copy; 2025 Purelytics. All rights reserved.</p>
-              <div className="flex items-center gap-3 font-semibold text-foreground">
+              <div className="flex items-center gap-4 group cursor-default">
                 <div className="relative">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-orange-500 via-white to-green-500 animate-spin" style={{ animationDuration: '3s' }} />
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-500 via-white to-green-600 animate-spin shadow-lg" style={{ animationDuration: '4s' }} />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-3 w-3 rounded-full bg-primary" />
+                    <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-primary/80 shadow-inner" />
                   </div>
                 </div>
-                <span className="text-lg bg-clip-text text-transparent bg-gradient-to-r from-orange-500 via-primary to-green-500 font-bold">
-                  Proudly Made in India
-                </span>
-                <span className="text-2xl animate-pulse">🇮🇳</span>
+                <div className="flex flex-col">
+                  <span className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-orange-500 via-primary to-green-600 tracking-wide group-hover:scale-105 transition-transform duration-300">
+                    Proudly Made in India
+                  </span>
+                  <span className="text-xs text-muted-foreground font-medium">Empowering Health & Wellness</span>
+                </div>
+                <span className="text-3xl group-hover:scale-125 transition-transform duration-300">🇮🇳</span>
               </div>
             </div>
           </div>

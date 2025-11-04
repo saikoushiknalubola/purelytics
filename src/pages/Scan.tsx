@@ -1,18 +1,37 @@
-import { useState, useRef } from "react";
-import { Camera, Upload, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Camera, Upload, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const SCANNING_FACTS = [
+  "Did you know? Over 10,000 chemicals are used in cosmetics, but only a fraction are tested for safety.",
+  "Fun fact: Reading ingredient labels can help you avoid over 80% of harmful chemicals in daily products.",
+  "Health tip: Natural doesn't always mean safe - even natural ingredients can cause allergies.",
+  "Did you know? The average person uses 9-15 personal care products daily with over 120 chemicals.",
+  "Interesting: Some preservatives in cosmetics can mimic hormones and disrupt your endocrine system.",
+  "Fact: Your skin absorbs up to 60% of what you put on it, making ingredient safety crucial.",
+];
 
 
 const Scan = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [currentFact, setCurrentFact] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isScanning) {
+      const interval = setInterval(() => {
+        setCurrentFact((prev) => (prev + 1) % SCANNING_FACTS.length);
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [isScanning]);
 
   const startCamera = async () => {
     try {
@@ -230,11 +249,26 @@ const Scan = () => {
                 </div>
                 
                 {isScanning && (
-                  <div className="flex flex-col items-center justify-center gap-4 py-8 animate-pulse">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <div className="text-center space-y-2">
-                      <p className="text-lg font-semibold text-foreground">Analyzing Product</p>
-                      <p className="text-sm text-muted-foreground">Extracting ingredients and calculating safety score...</p>
+                  <div className="flex flex-col items-center justify-center gap-6 py-12 animate-fade-in">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+                      <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-2xl shadow-primary/50">
+                        <Loader2 className="h-10 w-10 animate-spin text-primary-foreground" />
+                      </div>
+                    </div>
+                    <div className="text-center space-y-3 max-w-md">
+                      <div className="flex items-center justify-center gap-2">
+                        <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+                        <p className="text-xl font-bold text-foreground">Analyzing Your Product</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground font-medium">
+                        Extracting ingredients and calculating safety score...
+                      </p>
+                      <div className="mt-6 p-4 bg-primary/5 rounded-xl border border-primary/20 backdrop-blur-sm">
+                        <p className="text-xs text-muted-foreground font-medium leading-relaxed animate-fade-in">
+                          💡 {SCANNING_FACTS[currentFact]}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
