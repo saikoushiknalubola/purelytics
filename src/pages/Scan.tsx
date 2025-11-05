@@ -1,9 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { Camera, Upload, Loader2, Sparkles } from "lucide-react";
+import { Camera, Upload, Loader2, Sparkles, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ScanDemo } from "@/components/ScanDemo";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const SCANNING_FACTS = [
   "Did you know? Over 10,000 chemicals are used in cosmetics, but only a fraction are tested for safety.",
@@ -264,6 +271,10 @@ const Scan = () => {
             <p className="text-muted-foreground text-lg">
               Discover what's really in your products with instant AI analysis
             </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-primary">
+              <Info className="h-4 w-4" />
+              <span>Photo must show the ingredients list</span>
+            </div>
           </div>
           
           <div className="backdrop-blur-sm bg-card/50 border-2 rounded-2xl shadow-xl p-6 md:p-8">
@@ -330,37 +341,53 @@ const Scan = () => {
                 )}
                 
                 {!isScanning && (
-                  <div className="space-y-4 mt-6">
-                    <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-6 border-2 border-primary/20">
-                      <h3 className="font-bold text-lg text-foreground mb-3 flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                        How to Get Perfect Results
-                      </h3>
-                      <ul className="space-y-3 text-sm text-muted-foreground">
-                        <li className="flex items-start gap-3">
-                          <span className="text-primary font-bold mt-0.5">1.</span>
-                          <span><strong className="text-foreground">Find the ingredients list</strong> on the back or side of the product packaging</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-primary font-bold mt-0.5">2.</span>
-                          <span><strong className="text-foreground">Ensure good lighting</strong> and hold your camera steady to avoid blur</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-primary font-bold mt-0.5">3.</span>
-                          <span><strong className="text-foreground">Capture the full ingredients list</strong> - make sure all text is visible and readable</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-primary font-bold mt-0.5">4.</span>
-                          <span><strong className="text-foreground">Avoid shadows and glare</strong> that might obscure the text</span>
-                        </li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-muted/50 rounded-lg p-4 text-center">
-                      <p className="text-xs text-muted-foreground">
-                        💡 <strong>Tip:</strong> We need to see the actual ingredients list printed on the product - not just the front label or brand name
-                      </p>
-                    </div>
+                  <div className="mt-6">
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="tips" className="border-2 border-primary/20 rounded-xl px-4 bg-gradient-to-r from-primary/5 to-accent/5">
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-2 text-foreground font-semibold">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                            <span>How to Get Perfect Results</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="pt-2 space-y-4">
+                            <ul className="space-y-3 text-sm text-muted-foreground">
+                              <li className="flex items-start gap-3">
+                                <span className="text-primary font-bold mt-0.5">1.</span>
+                                <span><strong className="text-foreground">Find the ingredients list</strong> on the back or side of the product packaging</span>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <span className="text-primary font-bold mt-0.5">2.</span>
+                                <span><strong className="text-foreground">Ensure good lighting</strong> and hold your camera steady to avoid blur</span>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <span className="text-primary font-bold mt-0.5">3.</span>
+                                <span><strong className="text-foreground">Capture the full ingredients list</strong> - make sure all text is visible and readable</span>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                <span className="text-primary font-bold mt-0.5">4.</span>
+                                <span><strong className="text-foreground">Avoid shadows and glare</strong> that might obscure the text</span>
+                              </li>
+                            </ul>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                      
+                      <AccordionItem value="demo" className="border-2 border-border rounded-xl px-4 mt-3">
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-2 text-foreground font-semibold">
+                            <Info className="h-5 w-5 text-primary" />
+                            <span>Try Demo Products & See Examples</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="pt-2">
+                            <ScanDemo />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   </div>
                 )}
               </div>
