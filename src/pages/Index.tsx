@@ -147,7 +147,7 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden pt-12 pb-8 md:pt-0 md:pb-0">
+      <section className="relative min-h-[85vh] md:min-h-screen flex items-center justify-center overflow-hidden pt-16 pb-12 md:pt-0 md:pb-0">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10" />
         
         {/* Animated background elements */}
@@ -158,36 +158,44 @@ const Index = () => {
         </div>
         
         <div className="container relative z-10 mx-auto px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto text-center space-y-3 sm:space-y-6">
-            <div className="space-y-2">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-foreground leading-[1.1]">
+          <div className="max-w-4xl mx-auto text-center space-y-4 sm:space-y-6 md:space-y-8">
+            <div className="space-y-3 sm:space-y-4">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-foreground leading-[1.1]">
                 {"Purelytics".split("").map((letter, i) => (
-                  <span key={i} className="letter-animate inline-block hover:text-primary transition-colors duration-300">
+                  <span 
+                    key={i} 
+                    className="inline-block hover:text-primary transition-all duration-300"
+                    style={{
+                      animation: `letter-slide 0.5s ease-out forwards`,
+                      animationDelay: `${i * 0.05}s`,
+                      opacity: 0
+                    }}
+                  >
                     {letter}
                   </span>
                 ))}
               </h1>
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground leading-tight animate-slide-in-left" style={{ animationDelay: '0.6s' }}>
+              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground leading-tight animate-slide-in-left" style={{ animationDelay: '0.6s' }}>
                 Take Control of Your Health Today
               </p>
             </div>
-            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4 animate-slide-in-left" style={{ animationDelay: '0.8s' }}>
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed px-2 sm:px-4 animate-slide-in-left" style={{ animationDelay: '0.8s' }}>
               Scan any product and get instant insights into its ingredients with our advanced AI technology. Make informed decisions for a healthier lifestyle.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 sm:pt-6 animate-slide-in-left" style={{ animationDelay: '1s' }}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 sm:pt-6 md:pt-8 animate-slide-in-left px-4 sm:px-0" style={{ animationDelay: '1s' }}>
               <Button
                 size="lg"
                 onClick={() => navigate(user ? "/scan" : "/auth")}
-                className="text-sm sm:text-base px-6 sm:px-8 h-11 sm:h-12 md:h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground hover:scale-110 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-primary/50 animate-glow"
+                className="text-base sm:text-lg px-8 sm:px-10 h-12 sm:h-14 md:h-16 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-primary/50 animate-glow"
               >
                 {user ? "Start Scanning" : "Get Started Free"}
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-sm sm:text-base px-6 sm:px-8 h-11 sm:h-12 md:h-14 hover:scale-110 transition-all duration-300 border-2 hover:border-primary/50 hover:bg-primary/5 hover:shadow-lg"
+                className="text-base sm:text-lg px-8 sm:px-10 h-12 sm:h-14 md:h-16 hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50 hover:bg-primary/5 hover:shadow-lg"
               >
                 Learn More
               </Button>
@@ -198,16 +206,16 @@ const Index = () => {
 
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 py-20 md:py-32">
+      <section id="features" className="container mx-auto px-4 py-16 sm:py-20 md:py-32">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">Why Choose Purelytics</h2>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+          <div className="text-center space-y-3 sm:space-y-4 mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold px-4 sm:px-0">Why Choose Purelytics</h2>
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto px-4 sm:px-0">
               The most comprehensive health intelligence platform
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {features.map((feature, index) => (
               <div 
                 key={index}
@@ -225,16 +233,16 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="container mx-auto px-4 py-20 md:py-32 bg-secondary/30">
+      <section id="how-it-works" className="container mx-auto px-4 py-16 sm:py-20 md:py-32 bg-secondary/30">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">Simple. Fast. Accurate.</h2>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+          <div className="text-center space-y-3 sm:space-y-4 mb-12 sm:mb-16 px-4 sm:px-0">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">Simple. Fast. Accurate.</h2>
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
               Get instant insights in three simple steps
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             {[
               {
                 step: "01",
@@ -276,16 +284,16 @@ const Index = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="container mx-auto px-4 py-20 md:py-32">
+      <section id="testimonials" className="container mx-auto px-4 py-16 sm:py-20 md:py-32">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">What Our Users Say</h2>
-            <p className="text-xl md:text-2xl text-muted-foreground">
+          <div className="text-center space-y-3 sm:space-y-4 mb-12 sm:mb-16 px-4 sm:px-0">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">What Our Users Say</h2>
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground">
               Real people, real results
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {testimonials.map((testimonial, index) => (
               <div 
                 key={index}

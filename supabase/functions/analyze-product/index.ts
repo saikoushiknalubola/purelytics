@@ -135,17 +135,27 @@ Return ONLY a valid JSON object in this exact format:
     
     if (!aiData.choices || !aiData.choices[0] || !aiData.choices[0].message) {
       console.error("Invalid AI response structure:", JSON.stringify(aiData));
-      throw new Error("Invalid AI response");
+      throw new Error("Unable to analyze the image. Please ensure the product label is clearly visible and try again.");
     }
 
     const content = aiData.choices[0].message.content;
     console.log("Parsing AI response...");
     
-    const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || content.match(/(\{[\s\S]*\})/);
+    // More flexible JSON extraction
+    let jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+    if (!jsonMatch) {
+      jsonMatch = content.match(/(\{[\s\S]*\})/);
+    }
     
     if (!jsonMatch) {
       console.error("No JSON found in AI response:", content);
-      throw new Error("Could not extract product information from image. Please try with a clearer photo of the ingredients list.");
+      
+      // Check if AI explicitly said it couldn't read the image
+      if (content.toLowerCase().includes("cannot") || content.toLowerCase().includes("unable") || content.toLowerCase().includes("no product")) {
+        throw new Error("Could not read the product label. Please ensure:\n• The ingredients list is clearly visible\n• The image is well-lit and in focus\n• The text is not blurry or cut off");
+      }
+      
+      throw new Error("Failed to analyze the image. Please try with a clearer photo showing the ingredients list.");
     }
     
     // Validate AI response with Zod schema

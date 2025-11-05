@@ -43,13 +43,22 @@ const Scan = () => {
       
       console.log("Requesting camera access...");
       
-      // Request camera with simpler constraints first
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
+      // Check if mediaDevices is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera access is not supported on this device or browser. Please use the upload option instead.");
+      }
+      
+      // Request camera with mobile-friendly constraints
+      const constraints = {
         video: {
-          facingMode: "environment"
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
         audio: false
-      });
+      };
+      
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
       console.log("Camera access granted, stream obtained");
       
