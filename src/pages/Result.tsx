@@ -28,6 +28,107 @@ interface Product {
   }>;
 }
 
+const getDemoProduct = (demoId: string): Product | null => {
+  const demoProducts: Record<string, Product> = {
+    'demo-shampoo': {
+      id: 'demo-shampoo',
+      name: 'Herbal Essence Shampoo',
+      brand: 'Herbal Naturals',
+      category: 'personal_care',
+      toxiscore: 72,
+      color_code: 'yellow',
+      flagged_ingredients: [
+        {
+          name: 'Sodium Laureth Sulfate',
+          reason: 'Can cause skin irritation and strip natural oils',
+          hazard_score: 3
+        },
+        {
+          name: 'Methylisothiazolinone',
+          reason: 'Known allergen and skin sensitizer',
+          hazard_score: 4
+        },
+        {
+          name: 'Fragrance',
+          reason: 'May contain undisclosed allergens',
+          hazard_score: 2
+        }
+      ],
+      summary: 'This shampoo has a ToxiScore of 72/100, placing it in the moderate safety zone. While it contains beneficial ingredients like Panthenol (Vitamin B5), it also includes Sodium Laureth Sulfate which can be harsh on sensitive scalps, and Methylisothiazolinone, a preservative linked to allergic reactions.',
+      alternatives: [
+        { name: 'Pure Coconut Shampoo', brand: 'Natural Care', score: 89 },
+        { name: 'Gentle Cleansing Shampoo', brand: 'Eco Essentials', score: 92 },
+        { name: 'Aloe Vera Hair Wash', brand: 'Green Beauty', score: 85 }
+      ]
+    },
+    'demo-snack': {
+      id: 'demo-snack',
+      name: 'Classic Potato Chips',
+      brand: 'Crispy Bites',
+      category: 'food',
+      toxiscore: 45,
+      color_code: 'red',
+      flagged_ingredients: [
+        {
+          name: 'Monosodium Glutamate',
+          reason: 'May cause headaches and allergic reactions in sensitive individuals',
+          hazard_score: 4
+        },
+        {
+          name: 'Yellow 5',
+          reason: 'Artificial colorant linked to hyperactivity in children',
+          hazard_score: 4
+        },
+        {
+          name: 'Yellow 6',
+          reason: 'Synthetic dye that may cause allergic reactions',
+          hazard_score: 4
+        },
+        {
+          name: 'Disodium Inosinate',
+          reason: 'Flavor enhancer that may trigger sensitivity',
+          hazard_score: 3
+        },
+        {
+          name: 'Disodium Guanylate',
+          reason: 'May cause adverse reactions in people with gout',
+          hazard_score: 3
+        }
+      ],
+      summary: 'This snack has a ToxiScore of 45/100, indicating significant health concerns. It contains MSG (Monosodium Glutamate) which can trigger headaches and allergic reactions, along with artificial colorants Yellow 5 and Yellow 6 that have been linked to hyperactivity in children. The combination of multiple flavor enhancers and synthetic additives makes this a less healthy choice for regular consumption.',
+      alternatives: [
+        { name: 'Baked Potato Crisps', brand: 'Healthy Crunch', score: 78 },
+        { name: 'Sea Salt Veggie Chips', brand: 'Pure Snacks', score: 82 },
+        { name: 'Organic Corn Chips', brand: 'Nature Valley', score: 86 },
+        { name: 'Multigrain Crackers', brand: 'Whole Foods', score: 80 }
+      ]
+    },
+    'demo-lotion': {
+      id: 'demo-lotion',
+      name: 'Natural Body Lotion',
+      brand: 'Pure Botanicals',
+      category: 'cosmetic',
+      toxiscore: 88,
+      color_code: 'green',
+      flagged_ingredients: [
+        {
+          name: 'Potassium Sorbate',
+          reason: 'Mild preservative, generally safe but may cause minimal skin irritation in rare cases',
+          hazard_score: 1
+        }
+      ],
+      summary: 'This body lotion has an excellent ToxiScore of 88/100, indicating it is a safe and healthy choice. Made primarily with organic and natural ingredients like Aloe Vera, Shea Butter, and nourishing oils, it moisturizes without harsh chemicals. The only flagged ingredient is Potassium Sorbate, a mild and commonly used preservative that is generally recognized as safe.',
+      alternatives: [
+        { name: 'Ultra Pure Moisturizer', brand: 'Clean Beauty', score: 95 },
+        { name: 'Organic Body Butter', brand: 'Earth Care', score: 93 },
+        { name: 'Nourishing Hand Cream', brand: 'Green Botanics', score: 90 }
+      ]
+    }
+  };
+
+  return demoProducts[demoId] || null;
+};
+
 const Result = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -40,13 +141,28 @@ const Result = () => {
 
   const loadProduct = async () => {
     try {
+      // Handle demo products with hardcoded data
+      if (id?.startsWith('demo-')) {
+        const demoData = getDemoProduct(id);
+        if (demoData) {
+          setProduct(demoData);
+          setLoading(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase
         .from("products")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
       
       // Transform the data to match our Product interface
       const productData: Product = {
@@ -136,6 +252,14 @@ const Result = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-3xl space-y-6 animate-fade-in">
+        {id?.startsWith('demo-') && (
+          <div className="bg-gradient-to-r from-primary/20 to-accent/20 border-2 border-primary/40 rounded-xl p-4 text-center">
+            <p className="font-bold text-foreground">
+              📋 Demo Product - This is a sample analysis to showcase Purelytics capabilities
+            </p>
+          </div>
+        )}
+        
         <Card className="p-8 space-y-8 bg-card/80 backdrop-blur-sm border-2 hover:shadow-xl transition-all">
           <div className="text-center space-y-3">
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{product.name}</h1>
