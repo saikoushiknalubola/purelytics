@@ -218,8 +218,11 @@ const Scan = () => {
           console.error("Inner analysis error:", innerError);
           const errorMessage = innerError.message || "Failed to analyze product";
           
-          if (errorMessage.includes("clearer") || errorMessage.includes("image")) {
-            toast.error("Could not read the product label. Please take a clearer photo of the ingredients list.");
+          if (errorMessage.includes("clearer") || errorMessage.includes("image") || errorMessage.includes("read")) {
+            toast.error("📸 Unable to read product ingredients", {
+              description: "Please take a photo showing the ingredients list clearly. Make sure it's well-lit and in focus.",
+              duration: 6000
+            });
           } else if (errorMessage.includes("sign in") || errorMessage.includes("Unauthorized")) {
             toast.error("Please sign in to scan products");
             navigate("/auth");
@@ -327,22 +330,37 @@ const Scan = () => {
                 )}
                 
                 {!isScanning && (
-                  <div className="bg-muted/50 rounded-lg p-6 space-y-3 mt-6">
-                    <h3 className="font-semibold text-foreground">Tips for Best Results:</h3>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary mt-0.5">•</span>
-                        <span>Ensure the ingredient list is clearly visible and well-lit</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary mt-0.5">•</span>
-                        <span>Hold the camera steady and avoid blur</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary mt-0.5">•</span>
-                        <span>Make sure the text is not cut off at the edges</span>
-                      </li>
-                    </ul>
+                  <div className="space-y-4 mt-6">
+                    <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-6 border-2 border-primary/20">
+                      <h3 className="font-bold text-lg text-foreground mb-3 flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        How to Get Perfect Results
+                      </h3>
+                      <ul className="space-y-3 text-sm text-muted-foreground">
+                        <li className="flex items-start gap-3">
+                          <span className="text-primary font-bold mt-0.5">1.</span>
+                          <span><strong className="text-foreground">Find the ingredients list</strong> on the back or side of the product packaging</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-primary font-bold mt-0.5">2.</span>
+                          <span><strong className="text-foreground">Ensure good lighting</strong> and hold your camera steady to avoid blur</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-primary font-bold mt-0.5">3.</span>
+                          <span><strong className="text-foreground">Capture the full ingredients list</strong> - make sure all text is visible and readable</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-primary font-bold mt-0.5">4.</span>
+                          <span><strong className="text-foreground">Avoid shadows and glare</strong> that might obscure the text</span>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-muted/50 rounded-lg p-4 text-center">
+                      <p className="text-xs text-muted-foreground">
+                        💡 <strong>Tip:</strong> We need to see the actual ingredients list printed on the product - not just the front label or brand name
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
