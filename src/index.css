@@ -135,6 +135,17 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes letter-slide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .animate-slide-in-left {
   animation: slideInLeft 0.8s ease-out forwards;
 }
