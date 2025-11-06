@@ -8,6 +8,18 @@ const Index = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+
+  const healthTips = [
+    "💚 Read ingredient labels carefully - your health depends on it",
+    "🌿 Natural doesn't always mean safe - verify with science",
+    "✨ Small changes in product choices lead to big health improvements",
+    "🛡️ Prevention is better than cure - scan before you buy",
+    "🌱 Your body deserves transparency in every product",
+    "💪 Informed choices today create a healthier tomorrow",
+    "🔍 Hidden toxins are everywhere - stay vigilant and aware",
+    "🌟 Empower yourself with knowledge about what goes on your skin"
+  ];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -19,6 +31,13 @@ const Index = () => {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTipIndex((prev) => (prev + 1) % healthTips.length);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const features = [
@@ -283,8 +302,68 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Statistics Section */}
+      <section className="container mx-auto px-4 py-16 sm:py-20 md:py-32 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-3 sm:space-y-4 mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">Our Impact</h2>
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground">
+              Empowering healthier choices across India
+            </p>
+          </div>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { number: "50K+", label: "Products Scanned", icon: Camera },
+              { number: "15K+", label: "Active Users", icon: Users },
+              { number: "98%", label: "Accuracy Rate", icon: CheckCircle },
+              { number: "24/7", label: "AI Support", icon: Sparkles }
+            ].map((stat, index) => (
+              <div key={index} className="bg-card border border-border rounded-2xl p-8 text-center hover:shadow-xl hover:border-primary/50 transition-all hover:-translate-y-1">
+                <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4 mx-auto">
+                  <stat.icon className="h-7 w-7 text-primary" />
+                </div>
+                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">{stat.number}</div>
+                <div className="text-muted-foreground font-medium">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Health Tips Section */}
+      <section className="container mx-auto px-4 py-16 sm:py-20 md:py-32">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 rounded-3xl p-8 sm:p-12 border border-primary/20 shadow-xl">
+            <div className="text-center space-y-6">
+              <div className="inline-block px-6 py-2 bg-primary/20 rounded-full">
+                <span className="text-sm font-semibold text-primary">Daily Health Wisdom</span>
+              </div>
+              <div className="min-h-[80px] flex items-center justify-center">
+                <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground leading-relaxed animate-fade-in px-4">
+                  {healthTips[currentTipIndex]}
+                </p>
+              </div>
+              <div className="flex justify-center gap-2 pt-4">
+                {healthTips.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentTipIndex(index)}
+                    className={`h-2 rounded-full transition-all ${
+                      index === currentTipIndex 
+                        ? 'w-8 bg-primary' 
+                        : 'w-2 bg-primary/30 hover:bg-primary/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
-      <section id="testimonials" className="container mx-auto px-4 py-16 sm:py-20 md:py-32">
+      <section id="testimonials" className="container mx-auto px-4 py-16 sm:py-20 md:py-32 bg-secondary/30">
         <div className="max-w-6xl mx-auto">
           <div className="text-center space-y-3 sm:space-y-4 mb-12 sm:mb-16 px-4 sm:px-0">
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">What Our Users Say</h2>
@@ -400,32 +479,45 @@ const Index = () => {
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
               <p className="text-muted-foreground">&copy; 2025 Purelytics. All rights reserved.</p>
               <div className="flex items-center gap-4 group cursor-default">
-                <svg className="h-12 w-12 group-hover:scale-110 transition-transform duration-300" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="48" fill="none" stroke="url(#gradient)" strokeWidth="2"/>
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" style={{ stopColor: '#FF9933', stopOpacity: 1 }} />
-                      <stop offset="50%" style={{ stopColor: 'white', stopOpacity: 1 }} />
-                      <stop offset="100%" style={{ stopColor: '#138808', stopOpacity: 1 }} />
-                    </linearGradient>
-                  </defs>
-                  <g className="animate-spin origin-center" style={{ animationDuration: '8s', transformOrigin: '50% 50%' }}>
-                    <circle cx="50" cy="50" r="3" fill="#000080"/>
-                    {[...Array(24)].map((_, i) => {
-                      const angle = (i * 15 * Math.PI) / 180;
-                      const x1 = 50 + 8 * Math.cos(angle);
-                      const y1 = 50 + 8 * Math.sin(angle);
-                      const x2 = 50 + 40 * Math.cos(angle);
-                      const y2 = 50 + 40 * Math.sin(angle);
-                      return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000080" strokeWidth="0.8"/>;
-                    })}
-                  </g>
-                </svg>
+                <div className="relative">
+                  <svg className="h-16 w-16 group-hover:scale-110 transition-all duration-500" viewBox="0 0 100 100">
+                    {/* Outer glow */}
+                    <circle cx="50" cy="50" r="48" fill="none" stroke="url(#gradient)" strokeWidth="3" className="drop-shadow-2xl"/>
+                    <defs>
+                      <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{ stopColor: '#FF9933', stopOpacity: 1 }} />
+                        <stop offset="50%" style={{ stopColor: '#FFFFFF', stopOpacity: 1 }} />
+                        <stop offset="100%" style={{ stopColor: '#138808', stopOpacity: 1 }} />
+                      </linearGradient>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    {/* Rotating chakra */}
+                    <g className="animate-spin origin-center" style={{ animationDuration: '12s', transformOrigin: '50% 50%' }} filter="url(#glow)">
+                      <circle cx="50" cy="50" r="4" fill="#000080" className="drop-shadow-lg"/>
+                      {[...Array(24)].map((_, i) => {
+                        const angle = (i * 15 * Math.PI) / 180;
+                        const x1 = 50 + 10 * Math.cos(angle);
+                        const y1 = 50 + 10 * Math.sin(angle);
+                        const x2 = 50 + 42 * Math.cos(angle);
+                        const y2 = 50 + 42 * Math.sin(angle);
+                        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000080" strokeWidth="1.2" className="drop-shadow"/>;
+                      })}
+                    </g>
+                  </svg>
+                  {/* Pulse effect */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-500 via-white to-green-600 opacity-20 blur-xl animate-pulse" />
+                </div>
                 <div className="flex flex-col">
-                  <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-primary to-green-600 tracking-wide group-hover:scale-105 transition-transform duration-300">
+                  <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-primary to-green-600 tracking-wide group-hover:scale-105 transition-transform duration-300 drop-shadow-lg">
                     Proudly Made in Bharat
                   </span>
-                  <span className="text-xs text-muted-foreground font-medium">Empowering Health & Wellness</span>
+                  <span className="text-xs text-muted-foreground font-semibold tracking-wider">Empowering Health & Wellness 🇮🇳</span>
                 </div>
               </div>
             </div>
