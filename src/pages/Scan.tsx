@@ -333,7 +333,7 @@ const Scan = () => {
                       </p>
                       <div className="mt-6 p-4 bg-primary/5 rounded-xl border border-primary/20 backdrop-blur-sm">
                         <p className="text-xs text-muted-foreground font-medium leading-relaxed animate-fade-in">
-                          💡 {SCANNING_FACTS[currentFact]}
+                          {SCANNING_FACTS[currentFact]}
                         </p>
                       </div>
                     </div>

@@ -11,14 +11,14 @@ const Index = () => {
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
   const healthTips = [
-    "💚 Read ingredient labels carefully - your health depends on it",
-    "🌿 Natural doesn't always mean safe - verify with science",
-    "✨ Small changes in product choices lead to big health improvements",
-    "🛡️ Prevention is better than cure - scan before you buy",
-    "🌱 Your body deserves transparency in every product",
-    "💪 Informed choices today create a healthier tomorrow",
-    "🔍 Hidden toxins are everywhere - stay vigilant and aware",
-    "🌟 Empower yourself with knowledge about what goes on your skin"
+    "Read ingredient labels carefully - your health depends on it",
+    "Natural doesn't always mean safe - verify with science",
+    "Small changes in product choices lead to big health improvements",
+    "Prevention is better than cure - scan before you buy",
+    "Your body deserves transparency in every product",
+    "Informed choices today create a healthier tomorrow",
+    "Hidden toxins are everywhere - stay vigilant and aware",
+    "Empower yourself with knowledge about what goes on your skin"
   ];
 
   useEffect(() => {
@@ -302,34 +302,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Statistics Section */}
-      <section className="container mx-auto px-4 py-16 sm:py-20 md:py-32 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-3 sm:space-y-4 mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">Our Impact</h2>
-            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground">
-              Empowering healthier choices across India
-            </p>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { number: "50K+", label: "Products Scanned", icon: Camera },
-              { number: "15K+", label: "Active Users", icon: Users },
-              { number: "98%", label: "Accuracy Rate", icon: CheckCircle },
-              { number: "24/7", label: "AI Support", icon: Sparkles }
-            ].map((stat, index) => (
-              <div key={index} className="bg-card border border-border rounded-2xl p-8 text-center hover:shadow-xl hover:border-primary/50 transition-all hover:-translate-y-1">
-                <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4 mx-auto">
-                  <stat.icon className="h-7 w-7 text-primary" />
-                </div>
-                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">{stat.number}</div>
-                <div className="text-muted-foreground font-medium">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Health Tips Section */}
       <section className="container mx-auto px-4 py-16 sm:py-20 md:py-32">
@@ -517,7 +489,7 @@ const Index = () => {
                   <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-primary to-green-600 tracking-wide group-hover:scale-105 transition-transform duration-300 drop-shadow-lg">
                     Proudly Made in Bharat
                   </span>
-                  <span className="text-xs text-muted-foreground font-semibold tracking-wider">Empowering Health & Wellness 🇮🇳</span>
+                  <span className="text-xs text-muted-foreground font-semibold tracking-wider">Empowering Health & Wellness</span>
                 </div>
               </div>
             </div>
