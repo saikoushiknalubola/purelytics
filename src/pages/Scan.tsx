@@ -213,9 +213,21 @@ const Scan = () => {
           console.log("Analysis response:", data);
 
           if (data?.productId) {
-            console.log("Success! Navigating to result:", data.productId);
-            toast.success(`Analysis complete! ${data.productName || 'Product'} scored ${data.score || 0}/100`);
-            navigate(`/result/${data.productId}`);
+            // Check if we need a better photo of ingredients
+            if (data.needsIngredientsPhoto) {
+              console.log("Product identified but needs ingredients photo");
+              toast.error("Ingredients not found", {
+                description: `We identified "${data.productName}" but couldn't find the ingredients. Please photograph the BACK or SIDE of the product.`,
+                duration: 6000,
+              });
+              setIsScanning(false);
+              // Still navigate to show the helpful message
+              navigate(`/result/${data.productId}`);
+            } else {
+              console.log("Success! Navigating to result:", data.productId);
+              toast.success(`Analysis complete! ${data.productName || 'Product'} scored ${data.score || 0}/100`);
+              navigate(`/result/${data.productId}`);
+            }
           } else if (data?.error) {
             throw new Error(data.error);
           } else {
