@@ -167,7 +167,34 @@ Return a JSON object in this exact format:
       // Check if ingredients array is empty before validation
       if (!parsedData.ingredients || parsedData.ingredients.length === 0) {
         console.error("AI returned empty ingredients array");
-        throw new Error("Could not extract ingredients from the image. Please ensure:\n• The ingredients list is clearly visible\n• You're photographing the back/side panel where ingredients are listed\n• The image is well-lit and text is readable\n• The camera is focused on the ingredients section");
+        
+        // Return a helpful response instead of throwing an error
+        const { data: helpfulProduct, error: insertError } = await supabase.from("products").insert({
+          user_id: user.id,
+          name: parsedData.productName || "Unknown Product",
+          brand: parsedData.brand || "Unknown",
+          category: parsedData.category || "personal_care",
+          ingredients_raw: "No ingredients detected",
+          toxiscore: null,
+          color_code: "gray",
+          flagged_ingredients: [],
+          summary: "We couldn't detect the ingredients list in this image. This usually happens when photographing the front of the product. To get a complete analysis, please take a photo of the BACK or SIDE of the product where the ingredients are listed. Look for text that starts with 'Ingredients:', 'Contains:', or 'Composition:'.",
+          alternatives: [],
+        }).select().single();
+
+        if (insertError) {
+          console.error("Could not save product:", insertError);
+          throw new Error(`We identified the product as "${parsedData.productName || "this product"}" but couldn't find the ingredients list. Please photograph the back or side panel where ingredients are typically listed.`);
+        }
+
+        return new Response(JSON.stringify({ 
+          productId: helpfulProduct.id,
+          score: null,
+          productName: parsedData.productName || "Unknown Product",
+          needsIngredientsPhoto: true
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       
       extractedData = ProductExtractionSchema.parse(parsedData);
