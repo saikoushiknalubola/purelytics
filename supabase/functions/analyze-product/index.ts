@@ -7,6 +7,7 @@ const ProductExtractionSchema = z.object({
   brand: z.string().trim().max(100).default("Unknown"),
   category: z.enum(["food", "cosmetic", "cleaning", "pharmaceutical", "beverage", "supplement", "personal_care"]),
   ingredients: z.array(z.string().trim().min(1).max(100)).min(1).max(500),
+  ingredientSource: z.enum(["image", "knowledge"]),
 });
 
 const SummarySchema = z.object({
@@ -84,31 +85,40 @@ Deno.serve(async (req) => {
               content: [
                 {
                   type: "text",
-                  text: `You are an expert product analyst. Your task is to extract information from this product image.
+          text: `You are an expert product analyst with comprehensive knowledge of product formulations. Analyze this image using a TWO-STEP process:
 
-IMPORTANT: Do your absolute best to extract ingredients. Even if the text is small, blurry, or partially visible, make your best effort to read and transcribe what you can see.
+STEP 1 - Try to extract ingredients from the image:
+• Look carefully for the ingredients list (typically on back, side, or bottom)
+• Ingredients sections start with: "Ingredients:", "Contains:", "Composition:", "INCI:", "Formula:"
+• Extract ALL visible ingredients, even if text is small, blurry, or partially visible
+• Use context clues and chemical knowledge to decipher unclear text
 
-INSTRUCTIONS:
-1. Look carefully for the ingredients list - typically found on the back, side, or bottom of products
-2. Ingredients sections usually start with labels like: "Ingredients:", "Contains:", "Composition:", "INCI:", "Formula:"
-3. Extract ALL ingredients you can identify, even if the text is challenging to read
-4. Try multiple approaches: zoom in mentally, consider partial words, use context clues
-5. If you see chemical names or scientific terms, include them as best you can decipher
+STEP 2 - If NO ingredients are visible in the image, use your KNOWLEDGE:
+• Identify the product name, brand, and category from what IS visible
+• Research and provide the TYPICAL/STANDARD ingredients for this specific product
+• Use your knowledge of common formulations for this product type
+• Provide the most accurate ingredient list based on typical formulations
 
 WHAT TO EXTRACT:
-1. Product name: The main product title (usually on the front)
-2. Brand: The manufacturer or brand name
-3. Category: Choose ONE that fits best: food, cosmetic, cleaning, pharmaceutical, beverage, supplement, personal_care
-4. Ingredients: List EVERY ingredient you can identify, even if you're not 100% certain of the spelling
+1. Product name: The main product title
+2. Brand: The manufacturer/brand name
+3. Category: Choose ONE: food, cosmetic, cleaning, pharmaceutical, beverage, supplement, personal_care
+4. Ingredients: Either from the IMAGE or from your KNOWLEDGE
+5. ingredientSource: Set to "image" if extracted from photo, "knowledge" if researched
 
-CRITICAL: Always try to extract at least some ingredients. Only give up if the image truly shows no product or is completely unreadable.
+CRITICAL RULES:
+• ALWAYS return ingredients - either from image OR from knowledge
+• NEVER return an empty ingredients array
+• If you can identify the product, you can provide typical ingredients
+• Be transparent about the source in ingredientSource field
 
-Return a JSON object in this exact format:
+Return ONLY valid JSON in this exact format:
 {
   "productName": "Product Name Here",
   "brand": "Brand Name Here", 
   "category": "personal_care",
-  "ingredients": ["ingredient1", "ingredient2", "ingredient3"]
+  "ingredients": ["ingredient1", "ingredient2", "ingredient3"],
+  "ingredientSource": "image"
 }`,
                 },
                 {
@@ -164,41 +174,8 @@ Return a JSON object in this exact format:
       const parsedData = JSON.parse(jsonMatch[1]);
       console.log("Parsed product data:", JSON.stringify(parsedData));
       
-      // Check if ingredients array is empty before validation
-      if (!parsedData.ingredients || parsedData.ingredients.length === 0) {
-        console.error("AI returned empty ingredients array");
-        
-        // Return a helpful response instead of throwing an error
-        const { data: helpfulProduct, error: insertError } = await supabase.from("products").insert({
-          user_id: user.id,
-          name: parsedData.productName || "Unknown Product",
-          brand: parsedData.brand || "Unknown",
-          category: parsedData.category || "personal_care",
-          ingredients_raw: "No ingredients detected",
-          toxiscore: null,
-          color_code: "gray",
-          flagged_ingredients: [],
-          summary: "We couldn't detect the ingredients list in this image. This usually happens when photographing the front of the product. To get a complete analysis, please take a photo of the BACK or SIDE of the product where the ingredients are listed. Look for text that starts with 'Ingredients:', 'Contains:', or 'Composition:'.",
-          alternatives: [],
-        }).select().single();
-
-        if (insertError) {
-          console.error("Could not save product:", insertError);
-          throw new Error(`We identified the product as "${parsedData.productName || "this product"}" but couldn't find the ingredients list. Please photograph the back or side panel where ingredients are typically listed.`);
-        }
-
-        return new Response(JSON.stringify({ 
-          productId: helpfulProduct.id,
-          score: null,
-          productName: parsedData.productName || "Unknown Product",
-          needsIngredientsPhoto: true
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      
       extractedData = ProductExtractionSchema.parse(parsedData);
-      console.log(`Successfully extracted: ${extractedData.productName} with ${extractedData.ingredients.length} ingredients`);
+      console.log(`Successfully extracted: ${extractedData.productName} with ${extractedData.ingredients.length} ingredients from ${extractedData.ingredientSource}`);
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error("AI product extraction validation failed:", error.errors);
@@ -298,6 +275,7 @@ Return a JSON object in this exact format:
 Product Name: ${extractedData.productName}
 Brand: ${extractedData.brand}
 Category: ${extractedData.category}
+Ingredient Source: ${extractedData.ingredientSource === "knowledge" ? "Typical formulation (ingredients from product knowledge)" : "Extracted from image"}
 ToxiScore: ${toxiscore}/100 (${colorCode} zone)
 Total Ingredients: ${extractedData.ingredients.length}
 Flagged Ingredients: ${flaggedIngredients.length}
@@ -314,6 +292,7 @@ Task:
    - What the ToxiScore means for this product
    - The main health concerns (if any)
    - Whether this product is generally safe to use
+   ${extractedData.ingredientSource === "knowledge" ? "   - IMPORTANT: Start with 'Based on typical formulation for this product...' to indicate ingredients are researched\n" : ""}
 
 2. Recommend 3-5 real alternative products from the same category that are safer
    - Use actual product names and brands
@@ -403,7 +382,7 @@ Return ONLY valid JSON in this format:
       name: extractedData.productName,
       brand: extractedData.brand,
       category: extractedData.category,
-      ingredients_raw: extractedData.ingredients.join(", "),
+      ingredients_raw: `${extractedData.ingredientSource === "knowledge" ? "[Typical formulation] " : ""}${extractedData.ingredients.join(", ")}`,
       toxiscore,
       color_code: colorCode,
       flagged_ingredients: flaggedIngredients,
