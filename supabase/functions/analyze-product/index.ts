@@ -84,36 +84,32 @@ Deno.serve(async (req) => {
               content: [
                 {
                   type: "text",
-                  text: `You are an expert at reading product labels and ingredient lists. Analyze this product image carefully.
+                  text: `You are an expert product analyst. Your task is to extract information from this product image.
 
-CRITICAL INSTRUCTIONS FOR INGREDIENT EXTRACTION:
-1. Look for the ingredients list - it's usually on the back or side of the product
-2. The ingredients section often starts with words like "Ingredients:", "Contains:", "Composition:", or similar
-3. Extract EVERY SINGLE ingredient mentioned, no matter how small the text
-4. If the image shows multiple sides/angles of the product, read from all visible areas
-5. Common ingredient separators: commas, semicolons, bullet points, or line breaks
-6. Be extremely thorough - even if there are 50+ ingredients, list them ALL
+IMPORTANT: Do your absolute best to extract ingredients. Even if the text is small, blurry, or partially visible, make your best effort to read and transcribe what you can see.
 
-PRODUCT INFORMATION TO EXTRACT:
-1. Product name (the main product title on the front label)
-2. Brand name (manufacturer or brand - look for registered trademark symbols ® or ™)
-3. Category (select the most appropriate): food, cosmetic, cleaning, pharmaceutical, beverage, supplement, personal_care
-4. Complete ingredients list (MANDATORY - must have at least one ingredient)
+INSTRUCTIONS:
+1. Look carefully for the ingredients list - typically found on the back, side, or bottom of products
+2. Ingredients sections usually start with labels like: "Ingredients:", "Contains:", "Composition:", "INCI:", "Formula:"
+3. Extract ALL ingredients you can identify, even if the text is challenging to read
+4. Try multiple approaches: zoom in mentally, consider partial words, use context clues
+5. If you see chemical names or scientific terms, include them as best you can decipher
 
-ERROR HANDLING:
-- If you cannot find ANY ingredients in this image, respond with: "NO_INGREDIENTS_VISIBLE"
-- If the image is too blurry to read text, respond with: "IMAGE_TOO_BLURRY"
-- If no product is visible, respond with: "NO_PRODUCT_DETECTED"
+WHAT TO EXTRACT:
+1. Product name: The main product title (usually on the front)
+2. Brand: The manufacturer or brand name
+3. Category: Choose ONE that fits best: food, cosmetic, cleaning, pharmaceutical, beverage, supplement, personal_care
+4. Ingredients: List EVERY ingredient you can identify, even if you're not 100% certain of the spelling
 
-SUCCESS RESPONSE FORMAT (JSON only):
+CRITICAL: Always try to extract at least some ingredients. Only give up if the image truly shows no product or is completely unreadable.
+
+Return a JSON object in this exact format:
 {
-  "productName": "Complete Product Name from Front Label",
-  "brand": "Brand/Manufacturer Name",
+  "productName": "Product Name Here",
+  "brand": "Brand Name Here", 
   "category": "personal_care",
-  "ingredients": ["Water", "Glycerin", "Sodium Laureth Sulfate", "Fragrance", "Preservative", "etc"]
-}
-
-Return ONLY valid JSON or one of the error messages above.`,
+  "ingredients": ["ingredient1", "ingredient2", "ingredient3"]
+}`,
                 },
                 {
                   type: "image_url",
@@ -149,28 +145,17 @@ Return ONLY valid JSON or one of the error messages above.`,
     }
 
     const content = aiData.choices[0].message.content.trim();
-    console.log("Parsing AI response...");
+    console.log("AI returned:", content.substring(0, 200) + "...");
     
-    // Check for specific error messages from AI
-    if (content === "NO_INGREDIENTS_VISIBLE") {
-      throw new Error("Could not find the ingredients list in this image. Please ensure you're photographing the back or side of the product where ingredients are typically listed.");
-    }
-    if (content === "IMAGE_TOO_BLURRY") {
-      throw new Error("The image is too blurry to read. Please take a clearer, well-lit photo with the camera held steady.");
-    }
-    if (content === "NO_PRODUCT_DETECTED") {
-      throw new Error("No product visible in the image. Please photograph the product label directly.");
-    }
-    
-    // More flexible JSON extraction
+    // Extract JSON from response
     let jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
     if (!jsonMatch) {
       jsonMatch = content.match(/(\{[\s\S]*\})/);
     }
     
     if (!jsonMatch) {
-      console.error("No JSON found in AI response:", content);
-      throw new Error("Unable to process the image. Please ensure the ingredients list is clearly visible and photographed directly.");
+      console.error("Could not parse AI response - no JSON found");
+      throw new Error("Unable to analyze the image. Please try:\n• Ensuring good lighting\n• Focusing on the ingredients panel\n• Taking the photo from directly above\n• Making sure text is clear and readable");
     }
     
     // Validate AI response with Zod schema
