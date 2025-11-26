@@ -255,7 +255,7 @@ const Result = () => {
         {id?.startsWith('demo-') && (
           <div className="bg-gradient-to-r from-primary/20 to-accent/20 border-2 border-primary/40 rounded-xl p-4 text-center">
             <p className="font-bold text-foreground">
-              📋 Demo Product - This is a sample analysis to showcase Purelytics capabilities
+              Demo Product - This is a sample analysis to showcase Purelytics capabilities
             </p>
           </div>
         )}
