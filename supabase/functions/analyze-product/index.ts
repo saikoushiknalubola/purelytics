@@ -77,33 +77,43 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-2.5-pro",
           messages: [
             {
               role: "user",
               content: [
                 {
                   type: "text",
-                  text: `Analyze this product image and extract the following information:
+                  text: `You are an expert at reading product labels and ingredient lists. Analyze this product image carefully.
 
-1. Product name (the main product name visible on the label)
-2. Brand name (the manufacturer or brand)
-3. Category: Choose ONE from: food, cosmetic, cleaning, pharmaceutical, beverage, supplement, personal_care
-4. ALL ingredients listed on the product (read every ingredient carefully)
+CRITICAL INSTRUCTIONS FOR INGREDIENT EXTRACTION:
+1. Look for the ingredients list - it's usually on the back or side of the product
+2. The ingredients section often starts with words like "Ingredients:", "Contains:", "Composition:", or similar
+3. Extract EVERY SINGLE ingredient mentioned, no matter how small the text
+4. If the image shows multiple sides/angles of the product, read from all visible areas
+5. Common ingredient separators: commas, semicolons, bullet points, or line breaks
+6. Be extremely thorough - even if there are 50+ ingredients, list them ALL
 
-IMPORTANT: 
-- Extract ALL ingredients, even if there are many
-- Include preservatives, additives, colors, flavors
-- If you can't read some ingredients clearly, do your best to identify them
-- Be thorough and accurate
+PRODUCT INFORMATION TO EXTRACT:
+1. Product name (the main product title on the front label)
+2. Brand name (manufacturer or brand - look for registered trademark symbols ® or ™)
+3. Category (select the most appropriate): food, cosmetic, cleaning, pharmaceutical, beverage, supplement, personal_care
+4. Complete ingredients list (MANDATORY - must have at least one ingredient)
 
-Return ONLY a valid JSON object in this exact format:
+ERROR HANDLING:
+- If you cannot find ANY ingredients in this image, respond with: "NO_INGREDIENTS_VISIBLE"
+- If the image is too blurry to read text, respond with: "IMAGE_TOO_BLURRY"
+- If no product is visible, respond with: "NO_PRODUCT_DETECTED"
+
+SUCCESS RESPONSE FORMAT (JSON only):
 {
-  "productName": "Full Product Name",
-  "brand": "Brand Name",
-  "category": "food",
-  "ingredients": ["ingredient1", "ingredient2", "ingredient3", ...]
-}`,
+  "productName": "Complete Product Name from Front Label",
+  "brand": "Brand/Manufacturer Name",
+  "category": "personal_care",
+  "ingredients": ["Water", "Glycerin", "Sodium Laureth Sulfate", "Fragrance", "Preservative", "etc"]
+}
+
+Return ONLY valid JSON or one of the error messages above.`,
                 },
                 {
                   type: "image_url",
@@ -138,8 +148,19 @@ Return ONLY a valid JSON object in this exact format:
       throw new Error("Unable to analyze the image. Please ensure the product label is clearly visible and try again.");
     }
 
-    const content = aiData.choices[0].message.content;
+    const content = aiData.choices[0].message.content.trim();
     console.log("Parsing AI response...");
+    
+    // Check for specific error messages from AI
+    if (content === "NO_INGREDIENTS_VISIBLE") {
+      throw new Error("Could not find the ingredients list in this image. Please ensure you're photographing the back or side of the product where ingredients are typically listed.");
+    }
+    if (content === "IMAGE_TOO_BLURRY") {
+      throw new Error("The image is too blurry to read. Please take a clearer, well-lit photo with the camera held steady.");
+    }
+    if (content === "NO_PRODUCT_DETECTED") {
+      throw new Error("No product visible in the image. Please photograph the product label directly.");
+    }
     
     // More flexible JSON extraction
     let jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
@@ -149,13 +170,7 @@ Return ONLY a valid JSON object in this exact format:
     
     if (!jsonMatch) {
       console.error("No JSON found in AI response:", content);
-      
-      // Check if AI explicitly said it couldn't read the image
-      if (content.toLowerCase().includes("cannot") || content.toLowerCase().includes("unable") || content.toLowerCase().includes("no product")) {
-        throw new Error("Could not read the product label. Please ensure:\n• The ingredients list is clearly visible\n• The image is well-lit and in focus\n• The text is not blurry or cut off");
-      }
-      
-      throw new Error("Failed to analyze the image. Please try with a clearer photo showing the ingredients list.");
+      throw new Error("Unable to process the image. Please ensure the ingredients list is clearly visible and photographed directly.");
     }
     
     // Validate AI response with Zod schema
@@ -163,15 +178,27 @@ Return ONLY a valid JSON object in this exact format:
     try {
       const parsedData = JSON.parse(jsonMatch[1]);
       console.log("Parsed product data:", JSON.stringify(parsedData));
+      
+      // Check if ingredients array is empty before validation
+      if (!parsedData.ingredients || parsedData.ingredients.length === 0) {
+        console.error("AI returned empty ingredients array");
+        throw new Error("Could not extract ingredients from the image. Please ensure:\n• The ingredients list is clearly visible\n• You're photographing the back/side panel where ingredients are listed\n• The image is well-lit and text is readable\n• The camera is focused on the ingredients section");
+      }
+      
       extractedData = ProductExtractionSchema.parse(parsedData);
       console.log(`Successfully extracted: ${extractedData.productName} with ${extractedData.ingredients.length} ingredients`);
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error("AI product extraction validation failed:", error.errors);
-        throw new Error("Could not validate product data. Please ensure the image shows the ingredients list clearly.");
+        const ingredientError = error.errors.find(e => e.path.includes('ingredients'));
+        if (ingredientError) {
+          throw new Error("Could not extract ingredients. Please photograph the ingredients list clearly - it's usually on the back or side of the product.");
+        }
+        throw new Error("Could not validate product data. Please ensure all product information is clearly visible.");
       }
       console.error("JSON parsing error:", error);
-      throw new Error("Could not read product information. Please try with a better photo.");
+      const errorMessage = error instanceof Error ? error.message : "Could not read product information. Please try with a clearer photo.";
+      throw new Error(errorMessage);
     }
 
     // Fetch ingredient toxicity data
