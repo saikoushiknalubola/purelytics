@@ -21,6 +21,7 @@ interface Product {
     hazard_score: number;
   }>;
   summary: string;
+  ingredients_raw?: string;
   alternatives?: Array<{
     name: string;
     brand: string;
@@ -174,6 +175,7 @@ const Result = () => {
         color_code: (data.color_code as "green" | "yellow" | "red") || "yellow",
         flagged_ingredients: (data.flagged_ingredients as any) || [],
         summary: data.summary || "",
+        ingredients_raw: data.ingredients_raw || "",
         alternatives: (data.alternatives as any) || []
       };
       
@@ -272,6 +274,12 @@ const Result = () => {
           </div>
 
           <ToxiScoreMeter score={product.toxiscore} colorCode={product.color_code} />
+
+          {product.ingredients_raw?.startsWith("[Typical formulation]") && (
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-accent/10 rounded-lg p-3 border border-accent/20">
+              <span className="font-medium">ℹ️ Ingredients based on typical product formulation</span>
+            </div>
+          )}
 
           <div className="text-center bg-secondary/20 rounded-xl p-6">
             <p className="text-base text-foreground/90 leading-relaxed">{product.summary}</p>
