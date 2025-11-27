@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Shield, Sparkles, Zap, CheckCircle, Camera, BarChart3, TrendingUp, Lock, Users, Globe, Menu, X, ArrowRight, Star } from "lucide-react";
+import { Shield, Sparkles, Zap, CheckCircle, Camera, BarChart3, TrendingUp, Lock, Users, Globe, Menu, X, ArrowRight, Star, Mail, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -429,22 +429,27 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-6 text-foreground">Company</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="#about" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">About Us</a></li>
-                <li><a href="#blog" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">Blog</a></li>
-                <li><a href="#careers" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">Careers</a></li>
-                <li><a href="#contact" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">Contact</a></li>
+                <li><a href="/about" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">About Us</a></li>
+                <li><a href="/contact" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">Contact</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-6 text-foreground">Resources</h4>
+              <h4 className="font-semibold mb-6 text-foreground">Contact</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">Security</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors hover:translate-x-1 inline-block">Help Center</a></li>
+                <li className="flex items-start gap-2">
+                  <Mail className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <a href="mailto:purelytics@gmail.com" className="hover:text-primary transition-colors">
+                    purelytics@gmail.com
+                  </a>
+                </li>
+                <li className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Warangal, Telangana<br />India</span>
+                </li>
               </ul>
             </div>
+            
           </div>
           
           <div className="mt-16 pt-8 border-t border-border/50">

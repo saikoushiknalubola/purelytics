@@ -60,23 +60,10 @@ const Contact = () => {
               </div>
               <h3 className="text-2xl font-bold mb-3">Email Us</h3>
               <a 
-                href="mailto:koushikmahaan@gmail.com"
+                href="mailto:purelytics@gmail.com"
                 className="text-lg text-muted-foreground hover:text-primary transition-colors"
               >
-                koushikmahaan@gmail.com
-              </a>
-            </div>
-
-            <div className="bg-card/50 backdrop-blur-sm rounded-3xl border border-border/50 p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-accent to-accent/60 flex items-center justify-center mb-6 shadow-lg">
-                <Phone className="h-8 w-8 text-primary-foreground" />
-              </div>
-              <h3 className="text-2xl font-bold mb-3">Call Us</h3>
-              <a 
-                href="tel:+917671030069"
-                className="text-lg text-muted-foreground hover:text-primary transition-colors"
-              >
-                +91 7671030069
+                purelytics@gmail.com
               </a>
             </div>
 
@@ -84,19 +71,10 @@ const Contact = () => {
               <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary/60 flex items-center justify-center mb-6 shadow-lg">
                 <MapPin className="h-8 w-8 text-primary-foreground" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">Visit Us</h3>
+              <h3 className="text-2xl font-bold mb-3">Location</h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Revithalize Quorporate Headquarters<br />
-                Warangal, Bharat 506006
-              </p>
-            </div>
-
-            {/* Made in India */}
-            <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-3xl p-8 border border-border/50 text-center">
-              <div className="text-6xl mb-4 animate-pulse">🇮🇳</div>
-              <h3 className="text-2xl font-bold mb-2">Proudly Made in India</h3>
-              <p className="text-muted-foreground">
-                Serving with dedication and innovation
+                Warangal, Telangana<br />
+                India
               </p>
             </div>
           </div>
@@ -156,15 +134,27 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Map Placeholder */}
+      {/* Map Section */}
       <section className="container mx-auto px-4 pb-20">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-card/30 backdrop-blur-sm rounded-3xl border border-border/50 overflow-hidden shadow-xl h-96 flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <MapPin className="h-16 w-16 text-primary mx-auto animate-bounce" />
-              <p className="text-xl text-muted-foreground">
-                Warangal, Bharat
-              </p>
+          <div className="bg-card/30 backdrop-blur-sm rounded-3xl border border-border/50 overflow-hidden shadow-xl">
+            <iframe
+              width="100%"
+              height="450"
+              style={{ border: 0 }}
+              loading="lazy"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=79.4941%2C17.9189%2C79.6941%2C18.0189&layer=mapnik&marker=17.9689%2C79.5941"
+              title="Warangal, India Map"
+            />
+            <div className="p-4 text-center">
+              <a 
+                href="https://www.openstreetmap.org/?mlat=17.9689&mlon=79.5941#map=12/17.9689/79.5941"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                View larger map
+              </a>
             </div>
           </div>
         </div>
