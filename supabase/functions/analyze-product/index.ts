@@ -46,8 +46,20 @@ Deno.serve(async (req) => {
 
     const { image } = await req.json();
     
-    if (!image) {
-      throw new Error("No image provided");
+    // Validate image presence and type
+    if (!image || typeof image !== 'string') {
+      throw new Error("Invalid image data");
+    }
+
+    // Validate MIME type and format
+    const mimeMatch = image.match(/^data:image\/(jpeg|jpg|png|webp);base64,/);
+    if (!mimeMatch) {
+      throw new Error("Only JPEG, PNG, and WebP formats are supported");
+    }
+
+    // Validate size (5MB image = ~7MB base64)
+    if (image.length > 7000000) {
+      throw new Error("Image too large. Maximum size is 5MB");
     }
 
     console.log("Image received, validating authentication...");
@@ -66,6 +78,19 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Analyzing product for user: ${user.id}`);
+
+    // Rate limiting: Check scans in last hour
+    const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+    const { count: recentScans } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', oneHourAgo);
+
+    if (recentScans && recentScans >= 10) {
+      console.log(`Rate limit exceeded for user ${user.id}`);
+      throw new Error("Rate limit exceeded. You can scan up to 10 products per hour. Please try again later.");
+    }
 
     // Use Lovable AI to analyze the image
     console.log("Sending image to Lovable AI for analysis...");
