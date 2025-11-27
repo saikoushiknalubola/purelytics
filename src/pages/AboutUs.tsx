@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Target, Eye, Heart, Users, TrendingUp, Globe } from "lucide-react";
+import founderPhoto from "@/assets/founder-photo.jpg";
 
 const AboutUs = () => {
   const navigate = useNavigate();
@@ -41,15 +42,41 @@ const AboutUs = () => {
         <div className="max-w-4xl mx-auto">
           <div className="bg-card/50 backdrop-blur-sm rounded-3xl border border-border/50 p-8 md:p-12 shadow-xl hover:shadow-2xl transition-all duration-300 animate-scale-in">
             <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="h-32 w-32 rounded-full bg-gradient-to-br from-primary via-primary/80 to-accent flex items-center justify-center shadow-lg">
-                <Users className="h-16 w-16 text-primary-foreground" />
-              </div>
+              <img 
+                src={founderPhoto}
+                alt="Saikoushik Nalubola - Founder of Purelytics"
+                className="h-48 w-48 rounded-2xl object-cover shadow-xl border-4 border-primary/20"
+              />
               <div className="flex-1 text-center md:text-left space-y-4">
                 <h2 className="text-3xl md:text-4xl font-bold">Founded by Saikoushik Nalubola</h2>
                 <p className="text-xl text-muted-foreground">Established in 2025</p>
                 <p className="text-lg text-muted-foreground leading-relaxed">
                   With a passion for health technology and consumer safety, Saikoushik Nalubola founded Purelytics to bridge the gap between complex ingredient labels and everyday consumers. Our mission is to democratize health information and empower individuals to make informed choices.
                 </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start pt-2">
+                  <Button 
+                    variant="default"
+                    size="lg"
+                    onClick={() => window.open('https://www.linkedin.com/in/saikoushiknalubola/', '_blank')}
+                    className="gap-2"
+                  >
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                    Connect on LinkedIn
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    size="lg"
+                    onClick={() => window.location.href = 'mailto:saikoushik42@gmail.com'}
+                    className="gap-2"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    saikoushik42@gmail.com
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
