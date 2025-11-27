@@ -277,7 +277,7 @@ const Result = () => {
 
           {product.ingredients_raw?.startsWith("[Typical formulation]") && (
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-accent/10 rounded-lg p-3 border border-accent/20">
-              <span className="font-medium">ℹ️ Ingredients based on typical product formulation</span>
+              <span className="font-medium">Ingredients based on typical product formulation</span>
             </div>
           )}
 
