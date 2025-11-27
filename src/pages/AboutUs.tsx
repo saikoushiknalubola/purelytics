@@ -139,13 +139,50 @@ const AboutUs = () => {
 
       {/* Made in India Section */}
       <section className="container mx-auto px-4 py-12">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-3xl p-8 border border-border/50">
-            <div className="text-6xl mb-4 animate-pulse">🇮🇳</div>
-            <h3 className="text-2xl md:text-3xl font-bold mb-3">Proudly Made in India</h3>
-            <p className="text-muted-foreground text-lg">
-              Built with pride in Bharat, serving the world with innovation and dedication to health and wellness.
-            </p>
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 rounded-3xl p-12 border-2 border-border/50 relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-0 left-0 w-full h-full" style={{
+                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px)',
+              }} />
+            </div>
+            
+            <div className="relative z-10 text-center space-y-6">
+              <div className="relative inline-block">
+                <svg className="h-24 w-24 mx-auto" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="48" fill="none" stroke="url(#gradient-about)" strokeWidth="3" className="drop-shadow-xl"/>
+                  <defs>
+                    <linearGradient id="gradient-about" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{ stopColor: '#FF9933', stopOpacity: 1 }} />
+                      <stop offset="50%" style={{ stopColor: '#FFFFFF', stopOpacity: 1 }} />
+                      <stop offset="100%" style={{ stopColor: '#138808', stopOpacity: 1 }} />
+                    </linearGradient>
+                  </defs>
+                  <g className="animate-spin origin-center" style={{ animationDuration: '12s', transformOrigin: '50% 50%' }}>
+                    <circle cx="50" cy="50" r="4" fill="#000080" className="drop-shadow-lg"/>
+                    {[...Array(24)].map((_, i) => {
+                      const angle = (i * 15 * Math.PI) / 180;
+                      const x1 = 50 + 10 * Math.cos(angle);
+                      const y1 = 50 + 10 * Math.sin(angle);
+                      const x2 = 50 + 42 * Math.cos(angle);
+                      const y2 = 50 + 42 * Math.sin(angle);
+                      return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000080" strokeWidth="1.2"/>;
+                    })}
+                  </g>
+                </svg>
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-500 via-white to-green-600 opacity-20 blur-xl animate-pulse" />
+              </div>
+              
+              <div className="space-y-3">
+                <h3 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-primary to-green-600">
+                  Proudly Made in Bharat
+                </h3>
+                <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto">
+                  Developed in Warangal, Telangana with a commitment to advancing health technology and empowering consumers across India and beyond.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
