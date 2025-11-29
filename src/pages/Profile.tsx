@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, History } from "lucide-react";
+import { ArrowLeft, LogOut, History, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 interface ScanHistory {
   id: string;
@@ -20,6 +21,7 @@ const Profile = () => {
   const [user, setUser] = useState<any>(null);
   const [scanHistory, setScanHistory] = useState<ScanHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -34,6 +36,12 @@ const Profile = () => {
       }
 
       setUser(user);
+
+      // Check if user is admin
+      const { data: adminCheck } = await supabase.rpc('is_admin', {
+        _user_id: user.id
+      });
+      setIsAdmin(adminCheck === true);
 
       const { data: products, error } = await supabase
         .from("products")
@@ -107,7 +115,15 @@ const Profile = () => {
               <span className="text-2xl font-black text-primary-foreground tracking-wider">PLY</span>
             </div>
             <div className="flex-1">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Your Profile</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Your Profile</h2>
+                {isAdmin && (
+                  <Badge variant="default" className="gap-1">
+                    <Shield className="h-3 w-3" />
+                    Admin
+                  </Badge>
+                )}
+              </div>
               <p className="text-muted-foreground mt-1">Manage your account and view activity</p>
             </div>
           </div>
@@ -126,6 +142,22 @@ const Profile = () => {
                   <p className="font-semibold text-lg">{scanHistory.length}</p>
                 </div>
               </div>
+              {isAdmin && (
+                <div className="p-4 rounded-lg bg-gradient-to-r from-primary/20 to-primary/10 border-2 border-primary/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Shield className="h-6 w-6 text-primary" />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Admin Access</p>
+                        <p className="font-semibold text-lg">Manage Platform</p>
+                      </div>
+                    </div>
+                    <Button onClick={() => navigate("/admin")} variant="default">
+                      Admin Dashboard
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </Card>
