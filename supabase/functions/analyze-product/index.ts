@@ -226,20 +226,45 @@ Return ONLY valid JSON in this exact format:
 
     console.log(`Database has ${ingredientData?.length || 0} ingredients`);
 
-    // Calculate toxicity score with improved algorithm
+    // Calculate toxicity score with IMPROVED FUZZY MATCHING algorithm
     const flaggedIngredients: any[] = [];
     let totalHazardScore = 0;
     let matchedCount = 0;
 
     console.log("Analyzing ingredients for toxicity...");
+    
+    // Helper function for fuzzy ingredient matching
+    const fuzzyMatch = (ingredient: string, dbName: string): boolean => {
+      const ingLower = ingredient.toLowerCase().trim();
+      const dbLower = dbName.toLowerCase().trim();
+      
+      // Exact match
+      if (ingLower === dbLower) return true;
+      
+      // Contains match (bidirectional)
+      if (ingLower.includes(dbLower) || dbLower.includes(ingLower)) return true;
+      
+      // Word boundary match for chemical families
+      // e.g., "methylparaben" contains "paraben"
+      const ingWords = ingLower.split(/[\s,-]+/);
+      const dbWords = dbLower.split(/[\s,-]+/);
+      
+      // Check if any word from db name appears in ingredient
+      for (const dbWord of dbWords) {
+        if (dbWord.length > 3) { // Ignore short words like "and", "or"
+          for (const ingWord of ingWords) {
+            if (ingWord.includes(dbWord) || dbWord.includes(ingWord)) {
+              return true;
+            }
+          }
+        }
+      }
+      
+      return false;
+    };
+    
     for (const ingredient of extractedData.ingredients) {
-      const ingredientLower = ingredient.toLowerCase().trim();
-      const match = ingredientData?.find((db: any) => {
-        const dbNameLower = db.name.toLowerCase();
-        return ingredientLower.includes(dbNameLower) || 
-               dbNameLower.includes(ingredientLower) ||
-               ingredientLower === dbNameLower;
-      });
+      const match = ingredientData?.find((db: any) => fuzzyMatch(ingredient, db.name));
 
       if (match) {
         matchedCount++;
@@ -249,39 +274,58 @@ Return ONLY valid JSON in this exact format:
           reason: match.description,
           hazard_score: match.hazard_score,
         });
-        console.log(`Flagged ingredient: ${match.name} (hazard: ${match.hazard_score})`);
+        console.log(`✓ Flagged: ${ingredient} → ${match.name} (hazard: ${match.hazard_score})`);
       }
     }
 
     console.log(`Matched ${matchedCount} out of ${extractedData.ingredients.length} ingredients`);
 
-    // Improved scoring logic
+    // ENHANCED scoring logic with dynamic calculation
     let toxiscore: number;
     let colorCode: string;
     
     if (matchedCount === 0) {
-      // If no ingredients matched our database, assume it's relatively safe but unknown
-      toxiscore = 75; // Neutral score for unknown products
-      colorCode = "yellow";
+      // If no ingredients matched our database, assume relatively safe but give neutral score
+      toxiscore = 80; // Slightly optimistic for unknown products
+      colorCode = "green";
+      console.log("No harmful ingredients detected in database - assigning neutral safe score");
     } else {
       // Calculate based on actual hazard scores (1-5 scale)
       const avgHazardScore = totalHazardScore / matchedCount;
       
-      // Convert hazard score to toxiscore: 
-      // Hazard 1 = 95-100, Hazard 2 = 80-94, Hazard 3 = 60-79, Hazard 4 = 40-59, Hazard 5 = 0-39
-      toxiscore = Math.round(100 - ((avgHazardScore - 1) * 21.25));
-      toxiscore = Math.max(0, Math.min(100, toxiscore));
+      // Enhanced conversion: Hazard 1=95, Hazard 2=85, Hazard 3=65, Hazard 4=45, Hazard 5=20
+      // More aggressive penalty for higher hazard scores
+      const baseScore = Math.round(100 - (avgHazardScore - 1) * 20);
       
-      // Also factor in the percentage of flagged ingredients
+      // Factor in the percentage of flagged ingredients (more weight)
       const flaggedPercentage = (matchedCount / extractedData.ingredients.length) * 100;
-      if (flaggedPercentage > 50) {
-        toxiscore = Math.round(toxiscore * 0.85); // Reduce score if more than half are problematic
+      let penaltyMultiplier = 1.0;
+      
+      if (flaggedPercentage > 70) {
+        penaltyMultiplier = 0.70; // Heavy penalty: >70% flagged
+      } else if (flaggedPercentage > 50) {
+        penaltyMultiplier = 0.80; // Moderate penalty: >50% flagged
+      } else if (flaggedPercentage > 30) {
+        penaltyMultiplier = 0.90; // Light penalty: >30% flagged
       }
       
+      // Apply penalty and consider total number of flagged ingredients
+      toxiscore = Math.round(baseScore * penaltyMultiplier);
+      
+      // Extra penalty if there are multiple high-hazard ingredients
+      const highHazardCount = flaggedIngredients.filter(i => i.hazard_score >= 4).length;
+      if (highHazardCount >= 3) {
+        toxiscore = Math.round(toxiscore * 0.85);
+      }
+      
+      // Clamp between 0-100
+      toxiscore = Math.max(0, Math.min(100, toxiscore));
+      
+      // Dynamic color coding
       colorCode = toxiscore >= 70 ? "green" : toxiscore >= 40 ? "yellow" : "red";
     }
     
-    console.log(`Score calculation: ${matchedCount}/${extractedData.ingredients.length} ingredients matched, avgHazard: ${matchedCount > 0 ? (totalHazardScore / matchedCount).toFixed(2) : 'N/A'}, final score: ${toxiscore}`);
+    console.log(`📊 Score: ${toxiscore}/100 | Matched: ${matchedCount}/${extractedData.ingredients.length} | Avg Hazard: ${matchedCount > 0 ? (totalHazardScore / matchedCount).toFixed(2) : 'N/A'} | Color: ${colorCode}`);
 
     // Generate AI summary with detailed safety analysis
     console.log("Generating safety summary and alternatives...");

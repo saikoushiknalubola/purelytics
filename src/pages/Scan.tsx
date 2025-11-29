@@ -55,44 +55,47 @@ const Scan = () => {
         throw new Error("Camera access is not supported on this device or browser. Please use the upload option instead.");
       }
       
-      // Request camera with mobile-friendly constraints
+      // Request camera with mobile-optimized constraints
       const constraints = {
         video: {
           facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1920, max: 1920 },
+          height: { ideal: 1080, max: 1080 }
         },
         audio: false
       };
       
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      
       console.log("Camera access granted, stream obtained");
       
+      // Set camera active FIRST to ensure video element is rendered
+      setIsCameraActive(true);
+      
+      // Small delay to ensure DOM is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       if (!videoRef.current) {
-        console.error("Video element not available");
+        console.error("Video element not available after render");
         mediaStream.getTracks().forEach(track => track.stop());
-        throw new Error("Video element not ready");
+        setIsCameraActive(false);
+        throw new Error("Camera element initialization failed");
       }
       
+      // Set the stream and configure video element
       videoRef.current.srcObject = mediaStream;
+      videoRef.current.setAttribute('playsinline', 'true');
+      videoRef.current.setAttribute('muted', 'true');
       setStream(mediaStream);
       
-      // Wait for video to be ready and play
-      videoRef.current.onloadedmetadata = () => {
-        console.log("Video metadata loaded");
-        if (videoRef.current) {
-          videoRef.current.play()
-            .then(() => {
-              console.log("Video playing successfully");
-              setIsCameraActive(true);
-            })
-            .catch(err => {
-              console.error("Error playing video:", err);
-              toast.error("Failed to start camera preview");
-            });
-        }
-      };
+      // Attempt to play with timeout
+      const playPromise = videoRef.current.play();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Camera initialization timeout')), 5000)
+      );
+      
+      await Promise.race([playPromise, timeoutPromise]);
+      console.log("Camera streaming successfully");
+      toast.success("Camera ready!", { duration: 2000 });
       
     } catch (error: any) {
       console.error("Camera error:", error.name, error.message);
@@ -250,16 +253,19 @@ const Scan = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="p-4 flex items-center justify-between border-b border-border bg-card/50 backdrop-blur-sm">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="hover:bg-primary/10">
+      <header className="relative p-4 flex items-center justify-between border-b border-border bg-card/50 backdrop-blur-sm">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="hover:bg-primary/10 z-10">
           ← Home
         </Button>
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center hover:scale-110 transition-all duration-300 shadow-md hover:shadow-primary/50">
-            <span className="text-xs font-black text-primary-foreground tracking-wider">PLY</span>
+        <button 
+          onClick={() => navigate("/")}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 cursor-pointer"
+        >
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center hover:scale-110 transition-all duration-300 shadow-md hover:shadow-primary/50">
+            <span className="text-sm font-black text-primary-foreground tracking-wider">PLY</span>
           </div>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="hover:bg-primary/10">
+        </button>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="hover:bg-primary/10 z-10">
           Profile
         </Button>
       </header>
@@ -393,7 +399,7 @@ const Scan = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="relative rounded-lg overflow-hidden bg-black">
+                <div className="relative rounded-xl overflow-hidden bg-black shadow-2xl">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -401,7 +407,10 @@ const Scan = () => {
                     muted
                     className="w-full aspect-video object-cover"
                   />
-                  <div className="absolute inset-0 border-4 border-primary/30 rounded-lg pointer-events-none" />
+                  <div className="absolute inset-0 border-4 border-primary/40 rounded-xl pointer-events-none animate-pulse" />
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-full">
+                    <p className="text-white text-sm font-medium">Position ingredients list in frame</p>
+                  </div>
                 </div>
                 <div className="flex gap-3">
                   <Button

@@ -230,24 +230,29 @@ const Result = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <header className="sticky top-0 z-50 p-4 flex items-center justify-between border-b border-border/50 bg-card/80 backdrop-blur-lg shadow-sm">
+      <header className="sticky top-0 z-50 relative p-4 flex items-center justify-between border-b border-border/50 bg-card/80 backdrop-blur-lg shadow-sm">
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={() => navigate("/scan")}
-          className="hover:bg-primary/10 transition-all"
+          className="hover:bg-primary/10 transition-all z-10"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Scan Again
         </Button>
-        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-lg hover:shadow-primary/50 hover:scale-110 transition-all duration-300">
-          <span className="text-sm font-black text-primary-foreground tracking-wider">PLY</span>
-        </div>
+        <button 
+          onClick={() => navigate("/")}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 cursor-pointer"
+        >
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-lg hover:shadow-primary/50 hover:scale-110 transition-all duration-300">
+            <span className="text-sm font-black text-primary-foreground tracking-wider">PLY</span>
+          </div>
+        </button>
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={handleShare}
-          className="hover:bg-primary/10 transition-all"
+          className="hover:bg-primary/10 transition-all z-10"
         >
           <Share2 className="h-4 w-4" />
         </Button>
