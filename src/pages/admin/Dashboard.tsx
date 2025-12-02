@@ -332,6 +332,18 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
+              <Card className="hover:shadow-lg transition-all cursor-pointer border-2" onClick={() => navigate('/admin/analytics')}>
+                <CardHeader>
+                  <CardTitle>Analytics Dashboard</CardTitle>
+                  <CardDescription>View scan trends, product insights, and ToxiScore analytics</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full">
+                    View Analytics
+                  </Button>
+                </CardContent>
+              </Card>
+
               <Card className="hover:shadow-lg transition-all border-2 opacity-60">
                 <CardHeader>
                   <CardTitle>User Management</CardTitle>
