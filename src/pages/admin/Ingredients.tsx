@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Search, Pencil, Trash2, Shield } from "lucide-react";
+import { ArrowLeft, Plus, Search, Pencil, Trash2, Shield, Download } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -208,6 +208,20 @@ const AdminIngredients = () => {
     return "secondary";
   };
 
+  const downloadIngredients = () => {
+    const dataToExport = filteredIngredients.length > 0 ? filteredIngredients : ingredients;
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ingredients${searchQuery ? '-filtered' : ''}.json`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    toast.success("Ingredients exported successfully");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-lg p-4">
@@ -242,10 +256,16 @@ const AdminIngredients = () => {
                 className="pl-10"
               />
             </div>
-            <Button onClick={() => handleOpenDialog()} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Ingredient
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={downloadIngredients} variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export {searchQuery && `(${filteredIngredients.length})`}
+              </Button>
+              <Button onClick={() => handleOpenDialog()} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Ingredient
+              </Button>
+            </div>
           </div>
 
           <div className="rounded-lg border bg-card">
