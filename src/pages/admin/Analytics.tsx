@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Shield, Download, Calendar, TrendingUp, Package } from "lucide-react";
+import { ArrowLeft, Shield, Download, Calendar, TrendingUp, Package, RefreshCw } from "lucide-react";
 import { 
   LineChart, 
   Line, 
@@ -21,7 +21,7 @@ import {
   Cell
 } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { format, subDays } from "date-fns";
 
 interface ScanData {
   date: string;
@@ -43,17 +43,12 @@ const AdminAnalytics = () => {
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
   const [toxiScoreTrend, setToxiScoreTrend] = useState<ScanData[]>([]);
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [timeRange]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       const days = parseInt(timeRange);
       const startDate = subDays(new Date(), days);
 
-      // Get all products within time range
       const { data: products, error } = await supabase
         .from('products')
         .select('*')
@@ -63,7 +58,7 @@ const AdminAnalytics = () => {
       if (error) throw error;
 
       // Process scan trends by day
-      const scansByDay: { [key: string]: { count: number; totalScore: number } } = {};
+      const scansByDay: Record<string, { count: number; totalScore: number }> = {};
       
       for (let i = 0; i < days; i++) {
         const date = format(subDays(new Date(), days - i - 1), 'MMM dd');
@@ -88,7 +83,7 @@ const AdminAnalytics = () => {
       setToxiScoreTrend(scanTrendData);
 
       // Process category data
-      const categoryMap: { [key: string]: { count: number; totalScore: number } } = {};
+      const categoryMap: Record<string, { count: number; totalScore: number }> = {};
       
       products?.forEach(product => {
         const category = product.category || 'Uncategorized';
@@ -103,7 +98,7 @@ const AdminAnalytics = () => {
         .map(([category, data]) => ({
           category,
           count: data.count,
-          avgScore: Math.round(data.totalScore / data.count)
+          avgScore: data.count > 0 ? Math.round(data.totalScore / data.count) : 0
         }))
         .sort((a, b) => b.count - a.count);
 
@@ -114,7 +109,24 @@ const AdminAnalytics = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange]);
+
+  // Initial load and realtime subscription
+  useEffect(() => {
+    loadAnalytics();
+
+    // Subscribe to realtime changes on products table
+    const channel = supabase
+      .channel('analytics-products-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        loadAnalytics();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadAnalytics]);
 
   const downloadAnalytics = () => {
     const analyticsData = {
@@ -137,57 +149,53 @@ const AdminAnalytics = () => {
     toast.success("Analytics data exported");
   };
 
-  const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#a4de6c'];
+  const COLORS = ['hsl(142, 76%, 36%)', 'hsl(48, 96%, 53%)', 'hsl(25, 95%, 53%)', 'hsl(0, 84%, 60%)', 'hsl(262, 83%, 58%)', 'hsl(199, 89%, 48%)', 'hsl(280, 65%, 60%)', 'hsl(160, 60%, 45%)'];
 
   const totalScans = scanTrends.reduce((sum, day) => sum + day.scans, 0);
   const avgDailyScans = totalScans / parseInt(timeRange);
-  const overallAvgToxiScore = scanTrends.length > 0 
+  const overallAvgToxiScore = totalScans > 0 
     ? Math.round(scanTrends.reduce((sum, day) => sum + (day.avgToxiScore * day.scans), 0) / totalScans) 
     : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-lg p-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate("/admin")}
-              className="hover:bg-primary/10"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Dashboard
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-lg px-4 py-3">
+        <div className="container mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} className="hover:bg-primary/10 shrink-0">
+              <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              <h1 className="text-xl font-bold">Analytics Dashboard</h1>
+              <Shield className="h-5 w-5 text-primary hidden sm:block" />
+              <h1 className="text-base sm:text-xl font-bold truncate">Analytics</h1>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={downloadAnalytics}
-            className="gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={loadAnalytics} disabled={loading} className="hover:bg-primary/10">
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button variant="outline" size="sm" onClick={downloadAnalytics} className="gap-1 text-xs sm:text-sm">
+              <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Export</span>
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
+      <main className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="space-y-4 sm:space-y-6">
+          {/* Title and Time Range */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-bold">Platform Analytics</h2>
-              <p className="text-muted-foreground">Track scan trends and product insights</p>
+              <h2 className="text-xl sm:text-2xl font-bold">Platform Analytics</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">Live scan trends and product insights</p>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select time range" />
+                <SelectTrigger className="w-[140px] sm:w-[180px] h-9 text-xs sm:text-sm">
+                  <SelectValue placeholder="Time range" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="7">Last 7 days</SelectItem>
@@ -200,237 +208,155 @@ const AdminAnalytics = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card className="border-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Total Scans</CardTitle>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            <Card className="border">
+              <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium">Total Scans</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-primary">{totalScans}</div>
-                <p className="text-xs text-muted-foreground mt-1">in last {timeRange} days</p>
+              <CardContent className="p-3 sm:p-4 pt-0">
+                <div className="text-xl sm:text-3xl font-bold text-primary">{totalScans}</div>
+                <p className="text-[9px] sm:text-xs text-muted-foreground">last {timeRange} days</p>
               </CardContent>
             </Card>
 
-            <Card className="border-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Avg Daily Scans</CardTitle>
+            <Card className="border">
+              <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium">Daily Avg</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-primary">{avgDailyScans.toFixed(1)}</div>
-                <p className="text-xs text-muted-foreground mt-1">scans per day</p>
+              <CardContent className="p-3 sm:p-4 pt-0">
+                <div className="text-xl sm:text-3xl font-bold text-primary">{avgDailyScans.toFixed(1)}</div>
+                <p className="text-[9px] sm:text-xs text-muted-foreground">scans/day</p>
               </CardContent>
             </Card>
 
-            <Card className="border-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Avg ToxiScore</CardTitle>
+            <Card className="border">
+              <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium">Avg Score</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-primary">{overallAvgToxiScore}</div>
-                <p className="text-xs text-muted-foreground mt-1">across all scans</p>
+              <CardContent className="p-3 sm:p-4 pt-0">
+                <div className="text-xl sm:text-3xl font-bold text-primary">{overallAvgToxiScore}</div>
+                <p className="text-[9px] sm:text-xs text-muted-foreground">ToxiScore</p>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="border-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
+          {/* Scan Trends Chart */}
+          <Card className="border">
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Scan Trends
               </CardTitle>
-              <CardDescription>Number of product scans over time</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Product scans over time</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
               {loading ? (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[200px] sm:h-[300px] flex items-center justify-center text-muted-foreground text-sm">
                   Loading...
                 </div>
               ) : scanTrends.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={scanTrends}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                    />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="scans" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={2}
-                      name="Scans"
-                      dot={{ fill: 'hsl(var(--primary))' }}
-                    />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} width={30} />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                    <Line type="monotone" dataKey="scans" stroke="hsl(var(--primary))" strokeWidth={2} name="Scans" dot={{ r: 3, fill: 'hsl(var(--primary))' }} />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  No scan data available
-                </div>
+                <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">No data</div>
               )}
             </CardContent>
           </Card>
 
-          <Card className="border-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
+          {/* ToxiScore Trends Chart */}
+          <Card className="border">
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 ToxiScore Trends
               </CardTitle>
-              <CardDescription>Average ToxiScore over time</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Average ToxiScore over time</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
               {loading ? (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[200px] sm:h-[300px] flex items-center justify-center text-muted-foreground text-sm">
                   Loading...
                 </div>
               ) : toxiScoreTrend.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={toxiScoreTrend}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12}
-                      domain={[0, 100]}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="avgToxiScore" 
-                      stroke="hsl(var(--destructive))" 
-                      strokeWidth={2}
-                      name="Avg ToxiScore"
-                      dot={{ fill: 'hsl(var(--destructive))' }}
-                    />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} domain={[0, 100]} width={30} />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                    <Line type="monotone" dataKey="avgToxiScore" stroke="hsl(0, 84%, 60%)" strokeWidth={2} name="Avg ToxiScore" dot={{ r: 3, fill: 'hsl(0, 84%, 60%)' }} />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  No ToxiScore data available
-                </div>
+                <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">No data</div>
               )}
             </CardContent>
           </Card>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  Product Categories
+          {/* Category Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card className="border">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  Categories
                 </CardTitle>
-                <CardDescription>Distribution by category</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">Distribution by category</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 {loading ? (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    Loading...
-                  </div>
+                  <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">Loading...</div>
                 ) : categoryData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ category, percent }) => `${category}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="count"
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    No category data available
+                  <div className="w-full h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={categoryData} cx="50%" cy="45%" innerRadius={35} outerRadius={60} paddingAngle={2} dataKey="count">
+                          {categoryData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '11px' }} />
+                        <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
+                ) : (
+                  <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">No data</div>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  Category ToxiScores
+            <Card className="border">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  Category Scores
                 </CardTitle>
-                <CardDescription>Average ToxiScore by category</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">Avg ToxiScore by category</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 {loading ? (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    Loading...
-                  </div>
+                  <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">Loading...</div>
                 ) : categoryData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={categoryData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis 
-                        dataKey="category" 
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                      />
-                      <YAxis 
-                        stroke="hsl(var(--muted-foreground))" 
-                        fontSize={12}
-                        domain={[0, 100]}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
-                      <Legend />
-                      <Bar 
-                        dataKey="avgScore" 
-                        fill="hsl(var(--primary))"
-                        name="Avg ToxiScore"
-                      />
+                      <XAxis dataKey="category" stroke="hsl(var(--muted-foreground))" fontSize={9} angle={-45} textAnchor="end" height={60} tick={{ fontSize: 9 }} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} domain={[0, 100]} width={30} tick={{ fontSize: 10 }} />
+                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '11px' }} />
+                      <Bar dataKey="avgScore" fill="hsl(var(--primary))" name="Avg ToxiScore" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    No category data available
-                  </div>
+                  <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">No data</div>
                 )}
               </CardContent>
             </Card>
