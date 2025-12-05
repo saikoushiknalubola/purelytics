@@ -15,6 +15,7 @@ interface DashboardStats {
   highRiskProducts: number;
   hazardDistribution: { name: string; value: number }[];
   recentScans: {
+    id: string;
     name: string;
     brand: string | null;
     toxiscore: number | null;
@@ -40,31 +41,43 @@ const AdminDashboard = () => {
     try {
       setIsLoading(true);
       
-      // Parallel fetch all data
-      const [ingredientResult, productsResult, userResult, ingredientsForHazard, recentScansResult] = await Promise.all([
+      // Fetch all data in parallel
+      const [ingredientResult, productsResult, ingredientsForHazard, recentScansResult] = await Promise.all([
         supabase.from('ingredients').select('*', { count: 'exact', head: true }),
-        supabase.from('products').select('toxiscore, color_code'),
-        supabase.from('user_roles').select('*', { count: 'exact', head: true }),
+        supabase.from('products').select('id, user_id, toxiscore, color_code'),
         supabase.from('ingredients').select('hazard_type'),
-        supabase.from('products').select('name, brand, toxiscore, created_at, color_code').order('created_at', { ascending: false }).limit(10)
+        supabase.from('products').select('id, name, brand, toxiscore, created_at, color_code').order('created_at', { ascending: false }).limit(10)
       ]);
 
-      const productCount = productsResult.data?.length || 0;
-      const avgScore = productsResult.data?.reduce((sum, p) => sum + (Number(p.toxiscore) || 0), 0) / (productCount || 1);
-      const highRisk = productsResult.data?.filter(p => Number(p.toxiscore) >= 70).length || 0;
+      const products = productsResult.data || [];
+      const productCount = products.length;
+      
+      // Calculate unique users from products table
+      const uniqueUsers = new Set(products.map(p => p.user_id)).size;
+      
+      // Calculate average score
+      const validScores = products.filter(p => p.toxiscore !== null);
+      const avgScore = validScores.length > 0 
+        ? validScores.reduce((sum, p) => sum + (Number(p.toxiscore) || 0), 0) / validScores.length 
+        : 0;
+      
+      // Count high-risk products
+      const highRisk = products.filter(p => Number(p.toxiscore) >= 70).length;
 
-      // Build hazard distribution
+      // Build hazard distribution from ingredients
       const hazardMap: Record<string, number> = {};
       ingredientsForHazard.data?.forEach(ing => {
         const type = ing.hazard_type || 'Unknown';
         hazardMap[type] = (hazardMap[type] || 0) + 1;
       });
-      const hazardDistribution = Object.entries(hazardMap).map(([name, value]) => ({ name, value }));
+      const hazardDistribution = Object.entries(hazardMap)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
 
       setStats({
         totalIngredients: ingredientResult.count || 0,
         totalProducts: productCount,
-        totalUsers: userResult.count || 0,
+        totalUsers: uniqueUsers,
         avgToxiScore: Math.round(avgScore),
         highRiskProducts: highRisk,
         hazardDistribution,
@@ -157,114 +170,111 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-lg px-4 py-3">
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-lg px-3 sm:px-4 py-3">
         <div className="container mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="hover:bg-primary/10 shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="hover:bg-primary/10 shrink-0 h-8 w-8 sm:h-9 sm:w-9">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary hidden sm:block" />
-              <h1 className="text-base sm:text-xl font-bold truncate">Admin Dashboard</h1>
+              <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h1 className="text-sm sm:text-xl font-bold truncate">Admin Dashboard</h1>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={loadStats} disabled={isLoading} className="hover:bg-primary/10">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="ghost" size="icon" onClick={loadStats} disabled={isLoading} className="hover:bg-primary/10 h-8 w-8 sm:h-9 sm:w-9">
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="hover:bg-primary/10 hidden sm:flex">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="hover:bg-primary/10 text-xs sm:text-sm px-2 sm:px-3">
               Profile
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-6xl">
-        <div className="space-y-6">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-6xl">
+        <div className="space-y-4 sm:space-y-6">
           {/* Title */}
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-1">Welcome, Admin</h2>
-            <p className="text-sm text-muted-foreground">Manage your Purelytics platform</p>
+            <h2 className="text-xl sm:text-3xl font-bold mb-1">Welcome, Admin</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">Manage your Purelytics platform</p>
           </div>
 
-          {/* Stats Grid - Mobile first 2x2, then 4 columns */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {/* Stats Grid - 2x2 on mobile, 4 columns on larger screens */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
             <Card className="hover:shadow-lg transition-all border">
-              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Ingredients</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between p-2 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium">Ingredients</CardTitle>
+                <Database className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0">
-                <div className="text-2xl sm:text-3xl font-bold text-primary">{stats.totalIngredients}</div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">Database entries</p>
-                <Button variant="ghost" size="sm" className="mt-2 w-full text-xs h-8" onClick={() => downloadData('ingredients')}>
-                  <Download className="mr-1 h-3 w-3" /> Export
+              <CardContent className="p-2 sm:p-4 pt-0">
+                <div className="text-xl sm:text-3xl font-bold text-primary">{stats.totalIngredients}</div>
+                <p className="text-[9px] sm:text-xs text-muted-foreground">Database entries</p>
+                <Button variant="ghost" size="sm" className="mt-1 sm:mt-2 w-full text-[10px] sm:text-xs h-6 sm:h-8" onClick={() => downloadData('ingredients')}>
+                  <Download className="mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3" /> Export
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-all border">
-              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Products</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between p-2 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium">Products</CardTitle>
+                <Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0">
-                <div className="text-2xl sm:text-3xl font-bold text-primary">{stats.totalProducts}</div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">Total analyses</p>
-                <Button variant="ghost" size="sm" className="mt-2 w-full text-xs h-8" onClick={() => downloadData('products')}>
-                  <Download className="mr-1 h-3 w-3" /> Export
+              <CardContent className="p-2 sm:p-4 pt-0">
+                <div className="text-xl sm:text-3xl font-bold text-primary">{stats.totalProducts}</div>
+                <p className="text-[9px] sm:text-xs text-muted-foreground">Total scans</p>
+                <Button variant="ghost" size="sm" className="mt-1 sm:mt-2 w-full text-[10px] sm:text-xs h-6 sm:h-8" onClick={() => downloadData('products')}>
+                  <Download className="mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3" /> Export
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-all border">
-              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between p-2 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium">Active Users</CardTitle>
+                <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0">
-                <div className="text-2xl sm:text-3xl font-bold text-primary">{stats.totalUsers}</div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">Registered</p>
-                <Button variant="ghost" size="sm" className="mt-2 w-full text-xs h-8" onClick={() => downloadData('users')}>
-                  <Download className="mr-1 h-3 w-3" /> Export
-                </Button>
+              <CardContent className="p-2 sm:p-4 pt-0">
+                <div className="text-xl sm:text-3xl font-bold text-primary">{stats.totalUsers}</div>
+                <p className="text-[9px] sm:text-xs text-muted-foreground">Unique scanners</p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-all border">
-              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Avg ToxiScore</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between p-2 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[10px] sm:text-sm font-medium">Avg ToxiScore</CardTitle>
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0">
-                <div className="text-2xl sm:text-3xl font-bold text-primary">{stats.avgToxiScore}</div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">{stats.highRiskProducts} high-risk</p>
+              <CardContent className="p-2 sm:p-4 pt-0">
+                <div className="text-xl sm:text-3xl font-bold text-primary">{stats.avgToxiScore}</div>
+                <p className="text-[9px] sm:text-xs text-muted-foreground">{stats.highRiskProducts} high-risk</p>
               </CardContent>
             </Card>
           </div>
 
           {/* Charts Grid - Stack on mobile */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
             {/* Hazard Distribution */}
             <Card className="border">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-lg">
                   <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   Hazard Distribution
                 </CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Ingredient hazard categories</CardDescription>
+                <CardDescription className="text-[10px] sm:text-sm">Ingredient hazard categories</CardDescription>
               </CardHeader>
-              <CardContent className="p-4 pt-0">
+              <CardContent className="p-2 sm:p-4 pt-0">
                 {stats.hazardDistribution.length > 0 ? (
-                  <div className="w-full h-[280px] sm:h-[320px]">
+                  <div className="w-full h-[220px] sm:h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={stats.hazardDistribution}
                           cx="50%"
-                          cy="45%"
-                          innerRadius={40}
-                          outerRadius={70}
+                          cy="40%"
+                          innerRadius={30}
+                          outerRadius={50}
                           paddingAngle={2}
                           dataKey="value"
                         >
@@ -277,20 +287,22 @@ const AdminDashboard = () => {
                             backgroundColor: 'hsl(var(--card))', 
                             border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
-                            fontSize: '12px'
+                            fontSize: '11px',
+                            padding: '6px 10px'
                           }} 
                         />
                         <Legend 
                           layout="horizontal" 
                           verticalAlign="bottom" 
                           align="center"
-                          wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                          wrapperStyle={{ fontSize: '9px', paddingTop: '8px' }}
+                          formatter={(value) => <span className="text-[9px] sm:text-[11px]">{value}</span>}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="h-[280px] flex items-center justify-center text-muted-foreground text-sm">
+                  <div className="h-[220px] sm:h-[300px] flex items-center justify-center text-muted-foreground text-xs sm:text-sm">
                     No data available
                   </div>
                 )}
@@ -299,29 +311,33 @@ const AdminDashboard = () => {
 
             {/* Recent Scans */}
             <Card className="border">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-lg">
                   <Package className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   Recent Scans
                 </CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Latest product analyses</CardDescription>
+                <CardDescription className="text-[10px] sm:text-sm">Latest product analyses</CardDescription>
               </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="space-y-2 max-h-[280px] sm:max-h-[320px] overflow-y-auto pr-1">
+              <CardContent className="p-2 sm:p-4 pt-0">
+                <div className="space-y-1.5 sm:space-y-2 max-h-[220px] sm:max-h-[300px] overflow-y-auto pr-1">
                   {stats.recentScans.length > 0 ? (
-                    stats.recentScans.map((scan, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 sm:p-3 rounded-lg border bg-card/50 gap-2">
+                    stats.recentScans.map((scan) => (
+                      <div 
+                        key={scan.id} 
+                        onClick={() => navigate(`/result/${scan.id}`)}
+                        className="flex items-center justify-between p-2 sm:p-3 rounded-lg border bg-card/50 gap-2 cursor-pointer hover:bg-secondary/30 transition-colors"
+                      >
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{scan.name}</p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{scan.brand || 'Unknown brand'}</p>
+                          <p className="font-medium text-xs sm:text-sm truncate">{scan.name}</p>
+                          <p className="text-[9px] sm:text-xs text-muted-foreground truncate">{scan.brand || 'Unknown brand'}</p>
                         </div>
-                        <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${getScoreColor(scan.color_code)}`}>
+                        <div className={`h-6 w-6 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-[9px] sm:text-xs font-bold shrink-0 ${getScoreColor(scan.color_code)}`}>
                           {Math.round(Number(scan.toxiscore) || 0)}
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">
+                    <div className="h-[180px] sm:h-[200px] flex items-center justify-center text-muted-foreground text-xs sm:text-sm">
                       No scans yet
                     </div>
                   )}
@@ -331,36 +347,36 @@ const AdminDashboard = () => {
           </div>
 
           {/* Management Tools */}
-          <div className="space-y-3">
-            <h3 className="text-xl sm:text-2xl font-bold">Management Tools</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="space-y-2 sm:space-y-3">
+            <h3 className="text-lg sm:text-2xl font-bold">Management Tools</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
               <Card className="hover:shadow-lg transition-all cursor-pointer border" onClick={() => navigate('/admin/ingredients')}>
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-base">Ingredient Database</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Add, edit, or remove ingredients</CardDescription>
+                <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                  <CardTitle className="text-sm sm:text-base">Ingredient Database</CardTitle>
+                  <CardDescription className="text-[10px] sm:text-sm">Add, edit, or remove ingredients</CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  <Button className="w-full" size="sm">Manage Ingredients</Button>
+                <CardContent className="p-3 sm:p-4 pt-1 sm:pt-2">
+                  <Button className="w-full text-xs sm:text-sm h-8 sm:h-9">Manage Ingredients</Button>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-all cursor-pointer border" onClick={() => navigate('/admin/analytics')}>
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-base">Analytics Dashboard</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">View scan trends and insights</CardDescription>
+                <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                  <CardTitle className="text-sm sm:text-base">Analytics Dashboard</CardTitle>
+                  <CardDescription className="text-[10px] sm:text-sm">View scan trends and insights</CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  <Button className="w-full" size="sm">View Analytics</Button>
+                <CardContent className="p-3 sm:p-4 pt-1 sm:pt-2">
+                  <Button className="w-full text-xs sm:text-sm h-8 sm:h-9">View Analytics</Button>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-all border opacity-60">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-base">User Management</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Coming soon</CardDescription>
+                <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                  <CardTitle className="text-sm sm:text-base">User Management</CardTitle>
+                  <CardDescription className="text-[10px] sm:text-sm">Coming soon</CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  <Button className="w-full" size="sm" disabled>Coming Soon</Button>
+                <CardContent className="p-3 sm:p-4 pt-1 sm:pt-2">
+                  <Button className="w-full text-xs sm:text-sm h-8 sm:h-9" disabled>Coming Soon</Button>
                 </CardContent>
               </Card>
             </div>
