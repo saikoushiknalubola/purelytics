@@ -370,13 +370,13 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-all border opacity-60">
+              <Card className="hover:shadow-lg transition-all cursor-pointer border" onClick={() => navigate('/admin/users')}>
                 <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
                   <CardTitle className="text-sm sm:text-base">User Management</CardTitle>
-                  <CardDescription className="text-[10px] sm:text-sm">Coming soon</CardDescription>
+                  <CardDescription className="text-[10px] sm:text-sm">Manage users and roles</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4 pt-1 sm:pt-2">
-                  <Button className="w-full text-xs sm:text-sm h-8 sm:h-9" disabled>Coming Soon</Button>
+                  <Button className="w-full text-xs sm:text-sm h-8 sm:h-9">Manage Users</Button>
                 </CardContent>
               </Card>
             </div>

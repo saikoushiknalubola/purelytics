@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Scan from "./pages/Scan";
 import Result from "./pages/Result";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
@@ -16,6 +17,7 @@ import AdminRoute from "./components/AdminRoute";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminIngredients from "./pages/admin/Ingredients";
 import AdminAnalytics from "./pages/admin/Analytics";
+import AdminUsers from "./pages/admin/Users";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
@@ -36,6 +39,7 @@ const App = () => (
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/ingredients" element={<AdminRoute><AdminIngredients /></AdminRoute>} />
           <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
