@@ -467,6 +467,37 @@ Return ONLY valid JSON in this format:
     console.log(`✅ Analysis complete! Product ID: ${product.id}`);
     console.log(`Product: ${extractedData.productName} | Score: ${toxiscore}/100 | Flagged: ${flaggedIngredients.length} ingredients`);
 
+    // Send email notification for high-risk products (ToxiScore below 70)
+    if (toxiscore < 70 && user.email) {
+      try {
+        console.log(`Sending risk alert email for high-risk product (ToxiScore: ${toxiscore})`);
+        const alertResponse = await fetch(`${supabaseUrl}/functions/v1/send-risk-alert`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({
+            email: user.email,
+            productName: extractedData.productName,
+            brand: extractedData.brand,
+            toxiscore,
+            flaggedIngredients,
+            summary: summaryJson.summary,
+          }),
+        });
+
+        if (alertResponse.ok) {
+          console.log("Risk alert email sent successfully");
+        } else {
+          console.error("Failed to send risk alert email:", await alertResponse.text());
+        }
+      } catch (emailError) {
+        console.error("Error sending risk alert email:", emailError);
+        // Don't throw - email failure shouldn't fail the whole scan
+      }
+    }
+
     return new Response(JSON.stringify({ 
       productId: product.id,
       score: toxiscore,
