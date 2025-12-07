@@ -29,12 +29,22 @@ import {
   RefreshCw,
   Search,
   Crown,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+}
 
 interface UserData {
   user_id: string;
   email: string;
+  full_name: string | null;
+  phone: string | null;
   scan_count: number;
   last_scan: string | null;
   role: "admin" | "user";
@@ -50,6 +60,19 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
+      // Fetch all profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name, phone");
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of user_id to profile
+      const profilesMap = new Map<string, UserProfile>();
+      profilesData?.forEach((p) => {
+        profilesMap.set(p.id, p);
+      });
+
       // Fetch all products grouped by user_id
       const { data: productsData, error: productsError } = await supabase
         .from("products")
@@ -98,8 +121,9 @@ const AdminUsers = () => {
         }
       });
 
-      // Get unique user IDs from both products and roles
+      // Get unique user IDs from profiles, products, and roles
       const allUserIds = new Set([
+        ...profilesMap.keys(),
         ...userStatsMap.keys(),
         ...rolesMap.keys(),
       ]);
@@ -107,9 +131,12 @@ const AdminUsers = () => {
       // Build user data array
       const userData: UserData[] = Array.from(allUserIds).map((userId) => {
         const stats = userStatsMap.get(userId);
+        const profile = profilesMap.get(userId);
         return {
           user_id: userId,
           email: `User ${userId.substring(0, 8)}...`,
+          full_name: profile?.full_name || null,
+          phone: profile?.phone || null,
           scan_count: stats?.scan_count || 0,
           last_scan: stats?.last_scan || null,
           role: rolesMap.get(userId) || "user",
@@ -143,6 +170,11 @@ const AdminUsers = () => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "user_roles" },
+        () => fetchUsers()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
         () => fetchUsers()
       )
       .subscribe();
@@ -193,10 +225,22 @@ const AdminUsers = () => {
     }
   };
 
+  const getInitials = (name: string | null, userId: string): string => {
+    if (name && name.trim()) {
+      const words = name.trim().split(/\s+/);
+      if (words.length >= 2) {
+        return (words[0][0] + words[1][0]).toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+    }
+    return userId.substring(0, 2).toUpperCase();
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       user.user_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.phone?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatDate = (date: string | null) => {
@@ -209,7 +253,7 @@ const AdminUsers = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <div className="container mx-auto px-4 py-6 md:py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
@@ -218,12 +262,14 @@ const AdminUsers = () => {
               variant="ghost"
               size="icon"
               onClick={() => navigate("/admin")}
-              className="shrink-0"
+              className="shrink-0 hover:bg-primary/10"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold">User Management</h1>
+              <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                User Management
+              </h1>
               <p className="text-sm text-muted-foreground">
                 {users.length} registered users
               </p>
@@ -245,9 +291,9 @@ const AdminUsers = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-          <Card className="p-4">
+          <Card className="p-4 bg-card/80 backdrop-blur-sm border-2 hover:shadow-lg transition-all">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
+              <div className="p-2.5 bg-primary/10 rounded-xl">
                 <Users className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -256,9 +302,9 @@ const AdminUsers = () => {
               </div>
             </div>
           </Card>
-          <Card className="p-4">
+          <Card className="p-4 bg-card/80 backdrop-blur-sm border-2 hover:shadow-lg transition-all">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-lg">
+              <div className="p-2.5 bg-amber-500/10 rounded-xl">
                 <Crown className="h-5 w-5 text-amber-500" />
               </div>
               <div>
@@ -269,10 +315,10 @@ const AdminUsers = () => {
               </div>
             </div>
           </Card>
-          <Card className="p-4">
+          <Card className="p-4 bg-card/80 backdrop-blur-sm border-2 hover:shadow-lg transition-all">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <ScanLine className="h-5 w-5 text-green-500" />
+              <div className="p-2.5 bg-success/10 rounded-xl">
+                <ScanLine className="h-5 w-5 text-success" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Total Scans</p>
@@ -282,9 +328,9 @@ const AdminUsers = () => {
               </div>
             </div>
           </Card>
-          <Card className="p-4">
+          <Card className="p-4 bg-card/80 backdrop-blur-sm border-2 hover:shadow-lg transition-all">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
+              <div className="p-2.5 bg-blue-500/10 rounded-xl">
                 <User className="h-5 w-5 text-blue-500" />
               </div>
               <div>
@@ -309,28 +355,32 @@ const AdminUsers = () => {
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search users..."
+              placeholder="Search by name or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
+              className="pl-9 h-11"
             />
           </div>
         </div>
 
         {/* Users Table */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden bg-card/80 backdrop-blur-sm border-2">
           {loading ? (
             <div className="flex items-center justify-center h-48">
-              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+              <div className="flex flex-col items-center gap-3">
+                <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading users...</p>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[150px]">User ID</TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="min-w-[200px]">User</TableHead>
+                    <TableHead className="hidden md:table-cell">Contact</TableHead>
                     <TableHead className="text-center">Scans</TableHead>
-                    <TableHead className="hidden md:table-cell">Last Scan</TableHead>
+                    <TableHead className="hidden lg:table-cell">Last Scan</TableHead>
                     <TableHead className="hidden sm:table-cell">Joined</TableHead>
                     <TableHead className="text-center">Role</TableHead>
                   </TableRow>
@@ -338,31 +388,53 @@ const AdminUsers = () => {
                 <TableBody>
                   {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
-                        <p className="text-muted-foreground">No users found</p>
+                      <TableCell colSpan={6} className="text-center py-12">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                            <Users className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                          <p className="text-muted-foreground">No users found</p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredUsers.map((user) => (
-                      <TableRow key={user.user_id}>
+                      <TableRow key={user.user_id} className="hover:bg-secondary/30">
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-muted rounded-full">
-                              {user.role === "admin" ? (
-                                <Shield className="h-3.5 w-3.5 text-amber-500" />
-                              ) : (
-                                <User className="h-3.5 w-3.5 text-muted-foreground" />
-                              )}
+                          <div className="flex items-center gap-3">
+                            <div className={`h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold ${
+                              user.role === "admin" 
+                                ? "bg-gradient-to-br from-amber-500 to-amber-600 text-white" 
+                                : "bg-gradient-to-br from-primary/80 to-primary text-primary-foreground"
+                            }`}>
+                              {getInitials(user.full_name, user.user_id)}
                             </div>
-                            <span className="font-mono text-xs md:text-sm truncate max-w-[120px] md:max-w-none">
-                              {user.user_id.substring(0, 8)}...
-                            </span>
+                            <div>
+                              <p className="font-semibold text-sm">
+                                {user.full_name || "Unnamed User"}
+                              </p>
+                              <p className="text-xs text-muted-foreground font-mono">
+                                {user.user_id.substring(0, 8)}...
+                              </p>
+                            </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="secondary">{user.scan_count}</Badge>
+                        <TableCell className="hidden md:table-cell">
+                          {user.phone ? (
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <Phone className="h-3.5 w-3.5" />
+                              {user.phone}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground/50">No phone</span>
+                          )}
                         </TableCell>
-                        <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+                        <TableCell className="text-center">
+                          <Badge variant="secondary" className="font-bold">
+                            {user.scan_count}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
                           {formatDate(user.last_scan)}
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
@@ -375,12 +447,24 @@ const AdminUsers = () => {
                               handleRoleChange(user.user_id, value)
                             }
                           >
-                            <SelectTrigger className="w-24 md:w-28 h-8 text-xs">
+                            <SelectTrigger className={`w-24 md:w-28 h-8 text-xs ${
+                              user.role === "admin" ? "border-amber-500/50 text-amber-600" : ""
+                            }`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="user">User</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="user">
+                                <div className="flex items-center gap-2">
+                                  <User className="h-3.5 w-3.5" />
+                                  User
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="admin">
+                                <div className="flex items-center gap-2">
+                                  <Shield className="h-3.5 w-3.5 text-amber-500" />
+                                  Admin
+                                </div>
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>
