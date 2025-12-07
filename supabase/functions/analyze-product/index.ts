@@ -226,106 +226,209 @@ Return ONLY valid JSON in this exact format:
 
     console.log(`Database has ${ingredientData?.length || 0} ingredients`);
 
-    // Calculate toxicity score with IMPROVED FUZZY MATCHING algorithm
+    // Calculate toxicity score with ADVANCED FUZZY MATCHING algorithm
     const flaggedIngredients: any[] = [];
     let totalHazardScore = 0;
+    let totalWeightedScore = 0;
     let matchedCount = 0;
 
     console.log("Analyzing ingredients for toxicity...");
     
-    // Helper function for fuzzy ingredient matching
-    const fuzzyMatch = (ingredient: string, dbName: string): boolean => {
-      const ingLower = ingredient.toLowerCase().trim();
-      const dbLower = dbName.toLowerCase().trim();
+    // Common chemical family patterns for enhanced matching
+    const chemicalFamilies: Record<string, string[]> = {
+      "paraben": ["methylparaben", "ethylparaben", "propylparaben", "butylparaben", "isobutylparaben"],
+      "sulfate": ["sodium lauryl sulfate", "sodium laureth sulfate", "sls", "sles", "ammonium lauryl sulfate"],
+      "phthalate": ["diethyl phthalate", "dibutyl phthalate", "dep", "dbp", "dehp"],
+      "formaldehyde": ["formaldehyde", "formalin", "methanal", "dmdm hydantoin", "imidazolidinyl urea", "quaternium-15"],
+      "silicone": ["dimethicone", "cyclomethicone", "trimethicone", "amodimethicone"],
+      "alcohol": ["alcohol denat", "ethanol", "isopropyl alcohol", "sd alcohol"],
+    };
+    
+    // Helper function for advanced fuzzy ingredient matching
+    const fuzzyMatch = (ingredient: string, dbName: string): { matched: boolean; confidence: number } => {
+      const ingLower = ingredient.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "");
+      const dbLower = dbName.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "");
       
-      // Exact match
-      if (ingLower === dbLower) return true;
+      // Exact match - highest confidence
+      if (ingLower === dbLower) return { matched: true, confidence: 1.0 };
       
       // Contains match (bidirectional)
-      if (ingLower.includes(dbLower) || dbLower.includes(ingLower)) return true;
+      if (ingLower.includes(dbLower) || dbLower.includes(ingLower)) {
+        return { matched: true, confidence: 0.9 };
+      }
       
       // Word boundary match for chemical families
-      // e.g., "methylparaben" contains "paraben"
-      const ingWords = ingLower.split(/[\s,-]+/);
-      const dbWords = dbLower.split(/[\s,-]+/);
+      const ingWords = ingLower.split(/[\s,-]+/).filter(w => w.length > 2);
+      const dbWords = dbLower.split(/[\s,-]+/).filter(w => w.length > 2);
       
-      // Check if any word from db name appears in ingredient
-      for (const dbWord of dbWords) {
-        if (dbWord.length > 3) { // Ignore short words like "and", "or"
-          for (const ingWord of ingWords) {
-            if (ingWord.includes(dbWord) || dbWord.includes(ingWord)) {
-              return true;
+      // Check chemical family patterns
+      for (const [family, variants] of Object.entries(chemicalFamilies)) {
+        if (dbLower.includes(family)) {
+          for (const variant of variants) {
+            if (ingLower.includes(variant) || variant.includes(ingLower.replace(/\s+/g, ""))) {
+              return { matched: true, confidence: 0.85 };
             }
           }
         }
       }
       
-      return false;
+      // Check if any significant word from db name appears in ingredient
+      for (const dbWord of dbWords) {
+        if (dbWord.length > 3) {
+          for (const ingWord of ingWords) {
+            if (ingWord.includes(dbWord) || dbWord.includes(ingWord)) {
+              return { matched: true, confidence: 0.75 };
+            }
+          }
+        }
+      }
+      
+      // Levenshtein-like similarity for close matches (simplified)
+      const similarity = calculateSimilarity(ingLower, dbLower);
+      if (similarity > 0.8) {
+        return { matched: true, confidence: similarity * 0.7 };
+      }
+      
+      return { matched: false, confidence: 0 };
     };
     
-    for (const ingredient of extractedData.ingredients) {
-      const match = ingredientData?.find((db: any) => fuzzyMatch(ingredient, db.name));
+    // Simple similarity calculation
+    const calculateSimilarity = (a: string, b: string): number => {
+      if (a === b) return 1;
+      const longer = a.length > b.length ? a : b;
+      const shorter = a.length > b.length ? b : a;
+      if (longer.length === 0) return 1;
+      
+      let matches = 0;
+      for (let i = 0; i < shorter.length; i++) {
+        if (longer.includes(shorter[i])) matches++;
+      }
+      return matches / longer.length;
+    };
+    
+    // Track position-based weighting (earlier ingredients = higher concentration)
+    const totalIngredients = extractedData.ingredients.length;
+    
+    for (let i = 0; i < extractedData.ingredients.length; i++) {
+      const ingredient = extractedData.ingredients[i];
+      let bestMatch: { db: any; confidence: number } | null = null;
+      
+      for (const db of ingredientData || []) {
+        const result = fuzzyMatch(ingredient, db.name);
+        if (result.matched && (!bestMatch || result.confidence > bestMatch.confidence)) {
+          bestMatch = { db, confidence: result.confidence };
+        }
+      }
 
-      if (match) {
+      if (bestMatch && bestMatch.confidence >= 0.7) {
         matchedCount++;
-        totalHazardScore += match.hazard_score;
+        const { db, confidence } = bestMatch;
+        
+        // Position-based weight: first 1/3 of ingredients have 1.5x weight, middle 1/3 normal, last 1/3 0.75x
+        let positionWeight = 1.0;
+        if (i < totalIngredients / 3) {
+          positionWeight = 1.5; // High concentration
+        } else if (i >= totalIngredients * 2 / 3) {
+          positionWeight = 0.75; // Low concentration
+        }
+        
+        const weightedHazard = db.hazard_score * confidence * positionWeight;
+        totalHazardScore += db.hazard_score;
+        totalWeightedScore += weightedHazard;
+        
         flaggedIngredients.push({
-          name: match.name,
-          reason: match.description,
-          hazard_score: match.hazard_score,
+          name: db.name,
+          reason: db.description,
+          hazard_score: db.hazard_score,
+          matched_ingredient: ingredient,
+          confidence: Math.round(confidence * 100),
+          position_weight: positionWeight,
         });
-        console.log(`✓ Flagged: ${ingredient} → ${match.name} (hazard: ${match.hazard_score})`);
+        console.log(`✓ Flagged: ${ingredient} → ${db.name} (hazard: ${db.hazard_score}, confidence: ${Math.round(confidence * 100)}%, position: ${positionWeight}x)`);
       }
     }
 
     console.log(`Matched ${matchedCount} out of ${extractedData.ingredients.length} ingredients`);
 
-    // ENHANCED scoring logic with dynamic calculation
+    // ENHANCED scoring algorithm with weighted calculation
     let toxiscore: number;
     let colorCode: string;
     
     if (matchedCount === 0) {
-      // If no ingredients matched our database, assume relatively safe but give neutral score
-      toxiscore = 80; // Slightly optimistic for unknown products
+      // No harmful ingredients detected - but consider product category
+      const categoryScores: Record<string, number> = {
+        "food": 85,
+        "beverage": 85,
+        "cosmetic": 80,
+        "personal_care": 78,
+        "supplement": 82,
+        "cleaning": 75,
+        "pharmaceutical": 88,
+      };
+      toxiscore = categoryScores[extractedData.category] || 80;
       colorCode = "green";
-      console.log("No harmful ingredients detected in database - assigning neutral safe score");
+      console.log(`No harmful ingredients matched - using category baseline: ${toxiscore}`);
     } else {
-      // Calculate based on actual hazard scores (1-5 scale)
-      const avgHazardScore = totalHazardScore / matchedCount;
+      // Calculate weighted average hazard score
+      const avgWeightedHazard = totalWeightedScore / matchedCount;
+      const avgRawHazard = totalHazardScore / matchedCount;
       
-      // Enhanced conversion: Hazard 1=95, Hazard 2=85, Hazard 3=65, Hazard 4=45, Hazard 5=20
-      // More aggressive penalty for higher hazard scores
-      const baseScore = Math.round(100 - (avgHazardScore - 1) * 20);
+      // Base score calculation using weighted hazard (scale 1-5 to 0-100)
+      // Hazard 1 = 95, Hazard 2 = 80, Hazard 3 = 60, Hazard 4 = 40, Hazard 5 = 20
+      const baseScore = Math.round(100 - (avgWeightedHazard - 1) * 18.75);
       
-      // Factor in the percentage of flagged ingredients (more weight)
+      // Factor in the percentage and count of flagged ingredients
       const flaggedPercentage = (matchedCount / extractedData.ingredients.length) * 100;
       let penaltyMultiplier = 1.0;
       
-      if (flaggedPercentage > 70) {
-        penaltyMultiplier = 0.70; // Heavy penalty: >70% flagged
-      } else if (flaggedPercentage > 50) {
-        penaltyMultiplier = 0.80; // Moderate penalty: >50% flagged
-      } else if (flaggedPercentage > 30) {
-        penaltyMultiplier = 0.90; // Light penalty: >30% flagged
+      if (flaggedPercentage > 60) {
+        penaltyMultiplier = 0.65; // Severe penalty
+      } else if (flaggedPercentage > 40) {
+        penaltyMultiplier = 0.75; // Heavy penalty
+      } else if (flaggedPercentage > 25) {
+        penaltyMultiplier = 0.85; // Moderate penalty
+      } else if (flaggedPercentage > 10) {
+        penaltyMultiplier = 0.92; // Light penalty
       }
       
-      // Apply penalty and consider total number of flagged ingredients
+      // Apply count-based penalty for many harmful ingredients
+      if (matchedCount >= 5) {
+        penaltyMultiplier *= 0.9;
+      } else if (matchedCount >= 3) {
+        penaltyMultiplier *= 0.95;
+      }
+      
+      // Extra penalty for high-hazard ingredients (score 4-5)
+      const highHazardCount = flaggedIngredients.filter(i => i.hazard_score >= 4).length;
+      const criticalHazardCount = flaggedIngredients.filter(i => i.hazard_score === 5).length;
+      
+      if (criticalHazardCount >= 2) {
+        penaltyMultiplier *= 0.75; // Multiple critical ingredients
+      } else if (criticalHazardCount >= 1) {
+        penaltyMultiplier *= 0.85; // At least one critical
+      }
+      
+      if (highHazardCount >= 3) {
+        penaltyMultiplier *= 0.85;
+      }
+      
+      // Calculate final score
       toxiscore = Math.round(baseScore * penaltyMultiplier);
       
-      // Extra penalty if there are multiple high-hazard ingredients
-      const highHazardCount = flaggedIngredients.filter(i => i.hazard_score >= 4).length;
-      if (highHazardCount >= 3) {
-        toxiscore = Math.round(toxiscore * 0.85);
+      // Clamp between 5-100 (never 0, always show some score)
+      toxiscore = Math.max(5, Math.min(100, toxiscore));
+      
+      // Dynamic color coding with better thresholds
+      if (toxiscore >= 75) {
+        colorCode = "green"; // Safe
+      } else if (toxiscore >= 50) {
+        colorCode = "yellow"; // Caution
+      } else {
+        colorCode = "red"; // Avoid
       }
-      
-      // Clamp between 0-100
-      toxiscore = Math.max(0, Math.min(100, toxiscore));
-      
-      // Dynamic color coding
-      colorCode = toxiscore >= 70 ? "green" : toxiscore >= 40 ? "yellow" : "red";
     }
     
-    console.log(`📊 Score: ${toxiscore}/100 | Matched: ${matchedCount}/${extractedData.ingredients.length} | Avg Hazard: ${matchedCount > 0 ? (totalHazardScore / matchedCount).toFixed(2) : 'N/A'} | Color: ${colorCode}`);
+    console.log(`📊 Score: ${toxiscore}/100 | Matched: ${matchedCount}/${extractedData.ingredients.length} | Weighted Hazard: ${matchedCount > 0 ? (totalWeightedScore / matchedCount).toFixed(2) : 'N/A'} | Color: ${colorCode}`);
 
     // Generate AI summary with detailed safety analysis
     console.log("Generating safety summary and alternatives...");

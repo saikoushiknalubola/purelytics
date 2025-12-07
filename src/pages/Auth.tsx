@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Mail, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Mail, ArrowLeft, Eye, EyeOff, User, Lock, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 
 const authSchema = z.object({
@@ -27,8 +27,10 @@ const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,7 +49,6 @@ const Auth = () => {
 
     try {
       if (mode === "forgot") {
-        // Handle forgot password
         const emailValidation = z.string().email().safeParse(email);
         if (!emailValidation.success) {
           throw new Error("Please enter a valid email address");
@@ -58,12 +59,11 @@ const Auth = () => {
         });
 
         if (error) throw error;
+        setEmailSent(true);
         toast.success("Password reset email sent! Check your inbox.");
-        setMode("login");
         return;
       }
 
-      // Validate inputs with Zod schema
       const validated = authSchema.parse({ email, password });
 
       if (mode === "login") {
@@ -79,9 +79,13 @@ const Auth = () => {
           password: validated.password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              full_name: fullName.trim() || null,
+            },
           },
         });
         if (error) throw error;
+        setEmailSent(true);
         toast.success("Account created! Check your email to verify your account.");
       }
     } catch (error: any) {
@@ -104,7 +108,7 @@ const Auth = () => {
       case "forgot":
         return "Reset Password";
       case "signup":
-        return "Join Purelytics";
+        return "Create Account";
       default:
         return "Welcome Back";
     }
@@ -115,11 +119,65 @@ const Auth = () => {
       case "forgot":
         return "Enter your email and we'll send you a reset link";
       case "signup":
-        return "Start making informed decisions about your products";
+        return "Join Purelytics and start your wellness journey";
       default:
-        return "Continue your journey to healthier choices";
+        return "Sign in to continue making healthier choices";
     }
   };
+
+  // Email confirmation sent screen
+  if (emailSent && (mode === "signup" || mode === "forgot")) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 h-72 w-72 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 h-96 w-96 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+
+        <Card className="w-full max-w-md p-8 space-y-6 backdrop-blur-sm bg-card/80 border-2 shadow-2xl relative z-10 animate-fade-in">
+          <div className="text-center space-y-4">
+            <div className="mx-auto h-20 w-20 rounded-2xl bg-gradient-to-br from-success via-success/80 to-success/60 flex items-center justify-center shadow-xl animate-scale-in">
+              <CheckCircle2 className="h-10 w-10 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+                {mode === "signup" ? "Check Your Email" : "Reset Link Sent"}
+              </h1>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {mode === "signup" 
+                  ? `We've sent a verification link to ${email}. Please check your inbox and click the link to activate your account.`
+                  : `We've sent a password reset link to ${email}. Please check your inbox and follow the instructions.`
+                }
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-4">
+            <Button 
+              variant="outline" 
+              className="w-full h-11"
+              onClick={() => {
+                setEmailSent(false);
+                setMode("login");
+              }}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Sign In
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Didn't receive the email? Check your spam folder or{" "}
+              <button 
+                onClick={() => setEmailSent(false)} 
+                className="text-primary hover:underline"
+              >
+                try again
+              </button>
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4 relative overflow-hidden">
@@ -129,7 +187,7 @@ const Auth = () => {
         <div className="absolute bottom-20 right-10 h-96 w-96 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      <Card className="w-full max-w-md p-8 space-y-6 backdrop-blur-sm bg-card/80 border-2 shadow-2xl relative z-10 animate-fade-in">
+      <Card className="w-full max-w-md p-6 sm:p-8 space-y-6 backdrop-blur-sm bg-card/80 border-2 shadow-2xl relative z-10 animate-fade-in">
         {mode === "forgot" && (
           <button
             type="button"
@@ -150,7 +208,7 @@ const Auth = () => {
             )}
           </div>
           <div>
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               {getTitle()}
             </h1>
             <p className="text-muted-foreground text-sm">
@@ -159,9 +217,29 @@ const Auth = () => {
           </div>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-5">
+        <form onSubmit={handleAuth} className="space-y-4">
+          {mode === "signup" && (
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="text-sm font-medium flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                Full Name
+              </Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="h-11 transition-all focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+            <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              Email Address
+            </Label>
             <Input
               id="email"
               type="email"
@@ -176,7 +254,10 @@ const Auth = () => {
           {mode !== "forgot" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  Password
+                </Label>
                 {mode === "login" && (
                   <button
                     type="button"
@@ -201,22 +282,33 @@ const Auth = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {mode === "signup" && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Must be 8+ characters with uppercase and number
-                </p>
+                <div className="space-y-1 pt-1">
+                  <p className="text-xs text-muted-foreground">Password requirements:</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5 pl-4">
+                    <li className={password.length >= 8 ? "text-success" : ""}>
+                      {password.length >= 8 ? "✓" : "•"} At least 8 characters
+                    </li>
+                    <li className={/[A-Z]/.test(password) ? "text-success" : ""}>
+                      {/[A-Z]/.test(password) ? "✓" : "•"} One uppercase letter
+                    </li>
+                    <li className={/[0-9]/.test(password) ? "text-success" : ""}>
+                      {/[0-9]/.test(password) ? "✓" : "•"} One number
+                    </li>
+                  </ul>
+                </div>
               )}
             </div>
           )}
 
           <Button 
             type="submit" 
-            className="w-full h-11 font-medium shadow-lg hover:shadow-xl transition-all" 
+            className="w-full h-11 font-medium shadow-lg hover:shadow-xl transition-all mt-6" 
             disabled={loading}
           >
             {loading ? (
@@ -248,7 +340,10 @@ const Auth = () => {
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                onClick={() => {
+                  setMode(mode === "login" ? "signup" : "login");
+                  setEmailSent(false);
+                }}
                 className="text-sm text-primary hover:underline font-medium transition-colors"
               >
                 {mode === "login"
