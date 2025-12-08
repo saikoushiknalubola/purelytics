@@ -53,6 +53,33 @@ export type Database = {
         }
         Relationships: []
       }
+      point_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          points: number
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points: number
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points?: number
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           alternatives: Json | null
@@ -131,6 +158,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_points: {
+        Row: {
+          created_at: string
+          id: string
+          last_scan_date: string | null
+          points_balance: number
+          scan_streak: number
+          total_earned: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_scan_date?: string | null
+          points_balance?: number
+          scan_streak?: number
+          total_earned?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_scan_date?: string | null
+          points_balance?: number
+          scan_streak?: number
+          total_earned?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -157,6 +217,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_scan_points: {
+        Args: { p_points?: number; p_user_id: string }
+        Returns: undefined
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Shield, Sparkles, Zap, CheckCircle, Camera, BarChart3, TrendingUp, Lock, Users, Globe, Menu, X, ArrowRight, Star, Mail, MapPin } from "lucide-react";
+import { Shield, Sparkles, Zap, CheckCircle, Camera, BarChart3, TrendingUp, Lock, Users, Globe, Menu, X, ArrowRight, Star, Mail, MapPin, Crown, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -110,6 +110,7 @@ const Index = () => {
             <nav className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
               <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How it Works</a>
+              <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
               <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors">Reviews</a>
               <Button variant="ghost" onClick={() => navigate("/about")}>About Us</Button>
               <Button variant="ghost" onClick={() => navigate("/contact")}>Contact</Button>
@@ -143,6 +144,7 @@ const Index = () => {
             <nav className="md:hidden py-4 flex flex-col gap-4 border-t border-border">
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</a>
               <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>How it Works</a>
+              <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
               <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Reviews</a>
               <button onClick={() => { navigate("/about"); setMobileMenuOpen(false); }} className="text-muted-foreground hover:text-foreground transition-colors text-left">About Us</button>
               <button onClick={() => { navigate("/contact"); setMobileMenuOpen(false); }} className="text-muted-foreground hover:text-foreground transition-colors text-left">Contact</button>
@@ -365,6 +367,136 @@ const Index = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="container mx-auto px-4 py-16 sm:py-20 md:py-32">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-3 sm:space-y-4 mb-12 sm:mb-16 px-4 sm:px-0">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">Simple, Transparent Pricing</h2>
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+              Choose the plan that fits your wellness journey
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {/* Starter Plan */}
+            <div className="relative bg-card border-2 border-border rounded-2xl p-6 sm:p-8 hover:shadow-xl transition-all hover:border-primary/30">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold">Starter</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Perfect for getting started</p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl sm:text-5xl font-black">₹49</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    "10 product scans/month",
+                    "Basic ToxiScore analysis",
+                    "Ingredient breakdown",
+                    "Email support"
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12 font-semibold"
+                  onClick={() => navigate("/auth")}
+                >
+                  Get Started
+                </Button>
+              </div>
+            </div>
+
+            {/* Pro Plan - Most Popular */}
+            <div className="relative bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-2 border-primary rounded-2xl p-6 sm:p-8 shadow-xl scale-[1.02] sm:scale-105">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1 shadow-lg">
+                  <Crown className="h-3.5 w-3.5" />
+                  Most Popular
+                </div>
+              </div>
+              <div className="space-y-6 pt-2">
+                <div>
+                  <h3 className="text-xl font-bold">Pro</h3>
+                  <p className="text-sm text-muted-foreground mt-1">For health-conscious individuals</p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl sm:text-5xl font-black text-primary">₹199</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    "50 product scans/month",
+                    "Advanced AI analysis",
+                    "Safer alternatives suggestions",
+                    "Health risk insights",
+                    "Priority support",
+                    "Scan history & analytics"
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  className="w-full h-12 font-semibold shadow-lg"
+                  onClick={() => navigate("/auth")}
+                >
+                  Start Pro Trial
+                </Button>
+              </div>
+            </div>
+
+            {/* Premium Plan */}
+            <div className="relative bg-card border-2 border-border rounded-2xl p-6 sm:p-8 hover:shadow-xl transition-all hover:border-primary/30">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold">Premium</h3>
+                  <p className="text-sm text-muted-foreground mt-1">For families & power users</p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl sm:text-5xl font-black">₹399</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    "Unlimited product scans",
+                    "Full health reports",
+                    "Family sharing (5 users)",
+                    "API access for developers",
+                    "Custom ingredient alerts",
+                    "24/7 priority support",
+                    "Early access to features"
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12 font-semibold"
+                  onClick={() => navigate("/auth")}
+                >
+                  Go Premium
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            All plans include a 7-day free trial. Cancel anytime.
+          </p>
         </div>
       </section>
 

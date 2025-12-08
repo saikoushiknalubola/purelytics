@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LogOut, History, Shield, User, Mail, Phone, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, LogOut, History, Shield, User, Mail, Phone, Edit2, Save, X, Zap, Gift, TrendingUp, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 interface ScanHistory {
   id: string;
@@ -24,11 +25,19 @@ interface UserProfile {
   avatar_url: string | null;
 }
 
+interface UserPoints {
+  points_balance: number;
+  total_earned: number;
+  scan_streak: number;
+  last_scan_date: string | null;
+}
+
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [scanHistory, setScanHistory] = useState<ScanHistory[]>([]);
+  const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -93,6 +102,17 @@ const Profile = () => {
 
       if (error) throw error;
       setScanHistory(products || []);
+
+      // Fetch user points
+      const { data: pointsData } = await supabase
+        .from("user_points")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (pointsData) {
+        setUserPoints(pointsData);
+      }
     } catch (error) {
       console.error("Error loading user data:", error);
     } finally {
@@ -377,6 +397,110 @@ const Profile = () => {
               )}
             </div>
           )}
+        </Card>
+
+        {/* Points & Rewards Card */}
+        <Card className="p-4 sm:p-8 space-y-4 sm:space-y-6 bg-gradient-to-br from-card via-card to-primary/5 backdrop-blur-sm border-2 hover:shadow-xl transition-all">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 flex items-center justify-center shrink-0">
+                <Zap className="h-6 w-6 text-yellow-500" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-2xl font-bold">Points & Rewards</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">Earn points with every scan</p>
+              </div>
+            </div>
+            {userPoints && userPoints.scan_streak > 0 && (
+              <div className="flex items-center gap-1 bg-orange-500/10 text-orange-500 px-3 py-1.5 rounded-full">
+                <Flame className="h-4 w-4" />
+                <span className="text-sm font-semibold">{userPoints.scan_streak} day streak</span>
+              </div>
+            )}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            {/* Current Balance */}
+            <div className="p-4 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Zap className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Current Balance</p>
+                  <p className="text-2xl font-black text-primary">{userPoints?.points_balance || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Earned */}
+            <div className="p-4 rounded-xl bg-gradient-to-br from-secondary/30 to-secondary/10 border border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-secondary/50 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Total Earned</p>
+                  <p className="text-2xl font-black">{userPoints?.total_earned || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Reward */}
+            <div className="p-4 rounded-xl bg-gradient-to-br from-secondary/30 to-secondary/10 border border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-secondary/50 flex items-center justify-center">
+                  <Gift className="h-5 w-5 text-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-muted-foreground">Next Reward</p>
+                  <p className="text-sm font-semibold">{Math.max(0, 100 - (userPoints?.points_balance || 0))} pts away</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress to Next Reward */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Progress to 100 pts reward</span>
+              <span className="font-semibold">{Math.min(100, userPoints?.points_balance || 0)}%</span>
+            </div>
+            <Progress value={Math.min(100, userPoints?.points_balance || 0)} className="h-3" />
+          </div>
+
+          {/* Rewards Section */}
+          <div className="border-t border-border/50 pt-4 sm:pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Available Rewards</h3>
+              <Badge variant="secondary" className="gap-1">
+                <Gift className="h-3 w-3" />
+                Coming Soon
+              </Badge>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { name: "10% Off Premium", points: 100, icon: "🎁" },
+                { name: "Free Extra Scans", points: 200, icon: "📸" },
+                { name: "Health Report", points: 300, icon: "📊" },
+                { name: "Family Plan Discount", points: 500, icon: "👨‍👩‍👧‍👦" }
+              ].map((reward, i) => (
+                <div key={i} className="p-3 rounded-lg bg-muted/50 border border-border/50 opacity-60">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{reward.icon}</span>
+                      <span className="text-sm font-medium">{reward.name}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs">{reward.points} pts</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-center text-xs text-muted-foreground">
+            Earn 10 points per scan. Redeem rewards coming soon!
+          </p>
         </Card>
 
         {/* Scan History Card */}
