@@ -567,6 +567,23 @@ Return ONLY valid JSON in this format:
       throw new Error("Failed to save product analysis");
     }
 
+    // Award points for scan
+    try {
+      console.log("Awarding points for scan...");
+      const { error: pointsError } = await supabase.rpc('award_scan_points', {
+        p_user_id: user.id,
+        p_points: 10
+      });
+      if (pointsError) {
+        console.error("Failed to award points:", pointsError);
+      } else {
+        console.log("✓ Awarded 10 points for scan");
+      }
+    } catch (pointsErr) {
+      console.error("Points award error:", pointsErr);
+      // Don't throw - points failure shouldn't fail the scan
+    }
+
     console.log(`✅ Analysis complete! Product ID: ${product.id}`);
     console.log(`Product: ${extractedData.productName} | Score: ${toxiscore}/100 | Flagged: ${flaggedIngredients.length} ingredients`);
 
